@@ -117,7 +117,6 @@ export function numToChinese(num: number): string {
     for (let i = 0; i < len; i++) {
         let n = parseInt(str[i]);
         let p = len - i - 1; // position power
-        let q = p / 4;
         let m = p % 4;
 
         if (n !== 0) {
