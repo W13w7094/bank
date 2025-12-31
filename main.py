@@ -606,6 +606,66 @@ async def generate_contract(data: ContractRequest):
     finally:
         if os.path.exists(temp_dir): shutil.rmtree(temp_dir)
 
+# --- OCR Module ---
+try:
+    from paddleocr import PaddleOCR
+    OCR_ENABLED = True
+except ImportError:
+    OCR_ENABLED = False
+    logger.warning("PaddleOCR not installed or failed to import. OCR features disabled.")
+
+ocr_engine = None
+
+def get_ocr_engine():
+    global ocr_engine
+    if ocr_engine is None and OCR_ENABLED:
+        logger.info("Initializing PaddleOCR engine...")
+        # use_angle_cls=True auto downloads models if not present
+        ocr_engine = PaddleOCR(use_angle_cls=True, lang="ch", show_log=False)
+    return ocr_engine
+
+@app.post("/api/ocr")
+async def ocr_recognize(file: UploadFile = File(...)):
+    if not OCR_ENABLED:
+        return {"error": "OCR system not available"}
+    
+    try:
+        contents = await file.read()
+        
+        # Save temp file for OCR
+        temp_img_path = os.path.join(TEMP_DIR, f"ocr_{int(time.time())}_{file.filename}")
+        if not os.path.exists(TEMP_DIR):
+            os.makedirs(TEMP_DIR)
+            
+        with open(temp_img_path, "wb") as f:
+            f.write(contents)
+            
+        engine = get_ocr_engine()
+        if not engine:
+             return {"error": "OCR engine init failed"}
+
+        # Run OCR
+        result = engine.ocr(temp_img_path, cls=True)
+        
+        # Parse result
+        full_text = []
+        if result and result[0]:
+            for line in result[0]:
+                text = line[1][0]
+                full_text.append(text)
+        
+        # Cleanup
+        try:
+            os.remove(temp_img_path)
+        except:
+            pass
+            
+        return {"text": "\n".join(full_text)}
+        
+    except Exception as e:
+        logger.error(f"OCR Error: {str(e)}")
+        return {"error": str(e)}
+
 if __name__ == "__main__":
     import uvicorn
     os.makedirs(TEMPLATE_DIR, exist_ok=True)

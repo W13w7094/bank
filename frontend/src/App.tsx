@@ -13,11 +13,15 @@ import {
   SolutionOutlined, IdcardOutlined,
   ShopOutlined, AppstoreOutlined,
   DownOutlined, HomeOutlined, GoldOutlined, ImportOutlined,
-  ReloadOutlined
+  ReloadOutlined, ScanOutlined, CopyOutlined, InboxOutlined
 } from '@ant-design/icons';
+
+
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
+const { Dragger } = Upload; // Keep one
+const { TextArea } = Input;
 
 // --- 配置 ---
 const BASE_URL = "http://localhost:8000";
@@ -244,6 +248,12 @@ function App() {
   const [branchOptions, setBranchOptions] = useState<any[]>([]);
   const [systemOptions, setSystemOptions] = useState<any>({ education: [], ethnicity: [], occupation: [], loan_use: [], collateral_type: [] });
   const [allTemplates, setAllTemplates] = useState<any[]>([]);
+
+  // OCR State
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrResult, setOcrResult] = useState('');
+  const [ocrPreview, setOcrPreview] = useState('');
+
   const [form] = Form.useForm();
 
   // 1. 初始化
@@ -298,6 +308,35 @@ function App() {
       } catch (err) { message.error('文件解析失败'); }
     };
     reader.readAsText(file);
+    return false;
+  };
+
+  const handleOCR = async (file: File) => {
+    // Preview
+    const reader = new FileReader();
+    reader.onload = (e) => setOcrPreview(e.target?.result as string);
+    reader.readAsDataURL(file);
+
+    setOcrLoading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await axios.post(`${BASE_URL}/api/ocr`, formData);
+      if (res.data.text) {
+        setOcrResult(res.data.text);
+        message.success('识别成功');
+      } else if (res.data.error) {
+        message.warning('提示: ' + res.data.error);
+        if (String(res.data.error).includes('PaddleOCR')) {
+          message.info('OCR引擎可能正在冷启动，请重试');
+        }
+      }
+    } catch (err) {
+      message.error('OCR请求失败 (可能是后端未就绪)');
+    } finally {
+      setOcrLoading(false);
+    }
     return false;
   };
 
@@ -578,15 +617,62 @@ function App() {
   return (
     <ConfigProvider theme={{ token: { colorPrimary: PRIMARY_COLOR, borderRadius: 6 } }}>
       <Layout style={{ minHeight: '100vh' }}>
-        <Header style={{ padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 2px 8px #f0f1f2' }}>
+        <Header style={{ padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 2px 8px #f0f1f2', zIndex: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center' }}><AppstoreOutlined style={{ fontSize: 28, color: PRIMARY_COLOR, marginRight: 12 }} /><Title level={4} style={{ margin: 0 }}>信贷合同系统 Pro</Title></div>
           <Space>
             <Upload beforeUpload={handleImport} showUploadList={false} accept=".txt"><Button icon={<ImportOutlined />}>导入存档 (.txt)</Button></Upload>
             <Button icon={<ReloadOutlined />} onClick={() => window.location.reload()}>重置</Button>
-            <Tag color="geekblue">v1.0</Tag>
+            <Tag color="geekblue">v1.1 OCR</Tag>
           </Space>
         </Header>
-        <Content style={{ padding: '32px 0' }}><div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 20px' }}><Form form={form} layout="vertical" onFinish={onFinish} onValuesChange={onFormValuesChange}><Tabs defaultActiveKey="1" items={getTabItems() as any} type="line" size="large" /></Form></div></Content>
+        <Content style={{ padding: '24px' }}>
+          <Row gutter={24} style={{ height: 'calc(100vh - 112px)' }}>
+            {/* Left: Form Area */}
+            <Col span={12} style={{ height: '100%', overflowY: 'auto', paddingRight: 8 }}>
+              <Form form={form} layout="vertical" onFinish={onFinish} onValuesChange={onFormValuesChange}>
+                <Tabs defaultActiveKey="1" items={getTabItems() as any} type="line" size="large" />
+              </Form>
+            </Col>
+
+            {/* Right: OCR Area */}
+            <Col span={12} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <Card
+                title={<Space><ScanOutlined style={{ color: PRIMARY_COLOR }} /> 智能识别助手 (OCR)</Space>}
+                style={{ flex: 1, display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid #d9d9d9' }}
+                bodyStyle={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 16 }}
+              >
+                <div style={{ marginBottom: 16, flexShrink: 0 }}>
+                  <Dragger beforeUpload={handleOCR} showUploadList={false} style={{ padding: 16 }}>
+                    <p className="ant-upload-drag-icon"><InboxOutlined style={{ color: PRIMARY_COLOR }} /></p>
+                    <p className="ant-upload-text">点击或拖拽上传证件/权证图片</p>
+                    <p className="ant-upload-hint">支持 JPG/PNG，自动识别文字 (PaddleOCR)</p>
+                  </Dragger>
+                </div>
+
+                {ocrLoading && <div style={{ textAlign: 'center', padding: 20 }}><Spin tip="AI 正在识别中..." /></div>}
+
+                {!ocrLoading && ocrPreview && (
+                  <div style={{ height: 200, marginBottom: 16, display: 'flex', justifyContent: 'center', background: '#fafafa', borderRadius: 8, border: '1px solid #f0f0f0' }}>
+                    <img src={ocrPreview} style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} alt="preview" />
+                  </div>
+                )}
+
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text strong>识别结果：</Text>
+                    <Button type="primary" size="small" icon={<CopyOutlined />} onClick={() => { navigator.clipboard.writeText(ocrResult); message.success('已复制'); }} disabled={!ocrResult}>复制全部</Button>
+                  </div>
+                  <TextArea
+                    value={ocrResult}
+                    onChange={e => setOcrResult(e.target.value)}
+                    style={{ flex: 1, resize: 'none', background: '#f6ffed', borderColor: '#b7eb8f' }}
+                    placeholder="这里将显示识别出的文字内容..."
+                  />
+                </div>
+              </Card>
+            </Col>
+          </Row>
+        </Content>
 
       </Layout>
     </ConfigProvider>
