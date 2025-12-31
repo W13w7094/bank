@@ -670,7 +670,7 @@ async def ocr_recognize(file: UploadFile = File(...)):
     try:
         contents = await file.read()
         
-        # Validate image using PIL first
+        # Validate and preprocess image using PIL
         try:
             from PIL import Image
             import io
@@ -678,37 +678,59 @@ async def ocr_recognize(file: UploadFile = File(...)):
             # Try to open and validate image
             img = Image.open(io.BytesIO(contents))
             
-            # Convert to RGB if needed (fixes some format issues)
+            # Check image size
+            width, height = img.size
+            if width < 10 or height < 10:
+                return {"error": "Image too small (minimum 10x10 pixels)"}
+            if width > 10000 or height > 10000:
+                return {"error": "Image too large (maximum 10000x10000 pixels)"}
+            
+            # Convert to RGB if needed
             if img.mode not in ('RGB', 'L'):
+                logger.info(f"Converting image from {img.mode} to RGB")
                 img = img.convert('RGB')
             
-            # Save as temporary file in a standard format
+            # Resize if image is too large (improve OCR speed)
+            max_dimension = 4000
+            if width > max_dimension or height > max_dimension:
+                ratio = min(max_dimension / width, max_dimension / height)
+                new_size = (int(width * ratio), int(height * ratio))
+                logger.info(f"Resizing image from {img.size} to {new_size}")
+                img = img.resize(new_size, Image.Resampling.LANCZOS)
+            
+            # Save as temporary file
             temp_img_path = os.path.join(TEMP_DIR, f"ocr_{int(time.time())}.png")
             os.makedirs(TEMP_DIR, exist_ok=True)
-            
-            # Save as PNG (more reliable than original format)
             img.save(temp_img_path, 'PNG')
+            
+            logger.info(f"Image preprocessed: {width}x{height} -> {temp_img_path}")
             
         except Exception as img_error:
             logger.error(f"Image validation failed: {img_error}")
-            return {"error": f"Invalid image file: {str(img_error)}"}
+            return {"error": f"Invalid image: {str(img_error)}"}
         
         engine = get_ocr_engine()
         if not engine:
             return {"error": "OCR engine not initialized"}
 
-        # Run OCR - EasyOCR returns list of (bbox, text, confidence)
-        result = engine.readtext(temp_img_path)
+        # Run OCR with error handling
+        try:
+            result = engine.readtext(temp_img_path)
+        except Exception as ocr_error:
+            logger.error(f"EasyOCR processing failed: {ocr_error}")
+            return {"error": f"OCR processing failed: {str(ocr_error)}"}
         
-        # Extract text only, filter out low confidence results
+        # Extract text, filter low confidence
         full_text = []
         for item in result:
             if len(item) >= 3:
                 text = item[1]
                 confidence = item[2]
-                # Only include results with >0.1 confidence
                 if confidence > 0.1 and text.strip():
                     full_text.append(text)
+        
+        if not full_text:
+            return {"text": "", "message": "No text detected in image"}
         
         return {"text": "\n".join(full_text)}
         
@@ -716,7 +738,7 @@ async def ocr_recognize(file: UploadFile = File(...)):
         logger.error(f"OCR Error: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
-        return {"error": str(e)}
+        return {"error": f"Server error: {str(e)}"}
     finally:
         if temp_img_path and os.path.exists(temp_img_path):
             try:
