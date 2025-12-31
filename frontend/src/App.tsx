@@ -44,15 +44,23 @@ const parseIdCard = (idCard: string) => {
   if (!reg.test(cleanId)) return null;
 
   const birthdayStr = cleanId.substring(6, 14);
-  const year = birthdayStr.substring(0, 4);
-  const month = birthdayStr.substring(4, 6);
-  const day = birthdayStr.substring(6, 8);
-  const birthday = `${year}-${month}-${day}`;
+  const year = parseInt(birthdayStr.substring(0, 4));
+  const month = parseInt(birthdayStr.substring(4, 6));
+  const day = parseInt(birthdayStr.substring(6, 8));
+  const birthday = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
 
   const genderCode = parseInt(cleanId.charAt(16));
   const gender = genderCode % 2 === 1 ? '男' : '女';
 
-  return { birthday, gender };
+  // Calculate Age
+  const today = new Date();
+  let age = today.getFullYear() - year;
+  const m = today.getMonth() + 1 - month;
+  if (m < 0 || (m === 0 && today.getDate() < day)) {
+    age--;
+  }
+
+  return { birthday, gender, age };
 };
 
 const EditableSelect = ({ value, onChange, options, placeholder, disabled }: any) => (
@@ -132,6 +140,7 @@ const AmountInput = ({ value, onChange }: { value?: number; onChange?: (val: num
 // 接收 path (数组)，确保路径绝对正确
 const PersonalAttributes = ({ path, isAuto = false, options }: { path: (string | number)[], isAuto?: boolean, options: any }) => (
   <>
+    <Col span={6}><Form.Item shouldUpdate noStyle>{() => <Form.Item name={[...path, 'age']} label="年龄"><Input placeholder="自动" readOnly size="large" style={{ backgroundColor: '#f5f5f5', color: '#666' }} /></Form.Item>}</Form.Item></Col>
     <Col span={6}><Form.Item shouldUpdate noStyle>{() => <Form.Item name={[...path, 'gender']} label="性别"><Select options={[{ label: '男', value: '男' }, { label: '女', value: '女' }]} placeholder="自动" disabled={isAuto} size="large" /></Form.Item>}</Form.Item></Col>
     <Col span={6}><Form.Item shouldUpdate noStyle>{() => <Form.Item name={[...path, 'birthday']} label="生日"><Input placeholder="自动" disabled={isAuto} size="large" /></Form.Item>}</Form.Item></Col>
     <Col span={6}><Form.Item name={[...path, 'ethnicity']} label="民族"><EditableSelect options={options.ethnicity} placeholder="如：汉族" disabled={isAuto} /></Form.Item></Col>
@@ -203,6 +212,7 @@ const PersonList = ({ name, label, color, options }: { name: string; label: stri
               <Col span={24}><Divider dashed style={{ margin: '8px 0' }} plain><span style={{ fontSize: 12, color: '#999' }}>更多信息</span></Divider></Col>
               {/* ✨✨ 关键：正确传递 path，这里 field.name 就是索引 ✨✨ */}
               {/* 直接定义字段而不使用 PersonalAttributes */}
+              <Col span={6}><Form.Item name={[field.name, 'age']} label="年龄"><Input placeholder="自动" readOnly size="large" style={{ backgroundColor: '#f5f5f5', color: '#666' }} /></Form.Item></Col>
               <Col span={6}><Form.Item name={[field.name, 'gender']} label="性别"><Select options={[{ label: '男', value: '男' }, { label: '女', value: '女' }]} placeholder="自动" size="large" /></Form.Item></Col>
               <Col span={6}><Form.Item name={[field.name, 'birthday']} label="生日"><Input placeholder="自动" size="large" /></Form.Item></Col>
               <Col span={6}><Form.Item name={[field.name, 'ethnicity']} label="民族"><EditableSelect options={options.ethnicity} placeholder="如：汉族" /></Form.Item></Col>
@@ -242,7 +252,8 @@ function App() {
         const [branchRes, configRes] = await Promise.all([axios.get(BRANCH_API_URL), axios.get(CONFIG_API_URL)]);
         if (Array.isArray(branchRes.data)) {
           setBranchList(branchRes.data);
-          setBranchOptions(branchRes.data.map((b: any) => ({ label: b.name, value: b.name })));
+          setBranchList(branchRes.data);
+          setBranchOptions(branchRes.data.map((b: any) => ({ label: `${b.name} (${b.short_name || '无简称'})`, value: b.name })));
         }
         if (configRes.data) {
           const opts = configRes.data.options;
@@ -300,6 +311,7 @@ function App() {
       if (info) {
         form.setFieldValue([...prefixPath, 'gender'], info.gender);
         form.setFieldValue([...prefixPath, 'birthday'], info.birthday);
+        form.setFieldValue([...prefixPath, 'age'], info.age);
       }
     };
 
@@ -374,7 +386,8 @@ function App() {
 
     const newSpouseItem = {
       ...spouseData,
-      ...extraInfo, // 覆盖性别/生日
+      ...spouseData,
+      ...extraInfo, // 覆盖性别/生日/年龄
       relation: '夫妻',
       is_spouse_auto: true,
       address: spouseData.address || mainAddr
@@ -465,7 +478,8 @@ function App() {
           </Card>
           <Card title="支行信息" bordered={false} style={{ borderRadius: 12 }}>
             <Row gutter={24}>
-              <Col span={24}><Form.Item name={['branch', 'name']} label="办理支行" rules={[RULES.required]}><Select placeholder="请选择..." options={branchOptions} size="large" showSearch onChange={(v) => { const b = branchList.find(i => i.name === v); if (b) form.setFieldsValue({ branch: b }) }} /></Form.Item></Col>
+              <Col span={24}><Form.Item name={['branch', 'name']} label="办理支行" rules={[RULES.required]}><Select placeholder="请选择..." options={branchOptions} size="large" showSearch optionFilterProp="label" onChange={(v) => { const b = branchList.find(i => i.name === v); if (b) form.setFieldsValue({ branch: b }) }} /></Form.Item></Col>
+              <Col span={8}><Form.Item name={['branch', 'short_name']} label="支行简称"><Input readOnly variant="filled" /></Form.Item></Col>
               <Col span={8}><Form.Item name={['branch', 'manager']} label="负责人"><Input readOnly variant="filled" /></Form.Item></Col>
               <Col span={8}><Form.Item name={['branch', 'phone']} label="电话"><Input readOnly variant="filled" /></Form.Item></Col>
               <Col span={8}><Form.Item name={['branch', 'address']} label="地址"><Input readOnly variant="filled" /></Form.Item></Col>
