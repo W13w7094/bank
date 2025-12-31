@@ -2,6 +2,11 @@ import PyInstaller.__main__
 import os
 import shutil
 import sys
+import io
+
+# Force UTF-8 for stdout to avoid encoding errors on Windows runners
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 def build():
     print("🚀 开始构建 Windows 可执行文件...")
