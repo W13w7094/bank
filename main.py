@@ -670,13 +670,29 @@ async def ocr_recognize(file: UploadFile = File(...)):
     try:
         contents = await file.read()
         
-        # Save temp file
-        temp_img_path = os.path.join(TEMP_DIR, f"ocr_{int(time.time())}_{file.filename}")
-        os.makedirs(TEMP_DIR, exist_ok=True)
+        # Validate image using PIL first
+        try:
+            from PIL import Image
+            import io
             
-        with open(temp_img_path, "wb") as f:
-            f.write(contents)
+            # Try to open and validate image
+            img = Image.open(io.BytesIO(contents))
             
+            # Convert to RGB if needed (fixes some format issues)
+            if img.mode not in ('RGB', 'L'):
+                img = img.convert('RGB')
+            
+            # Save as temporary file in a standard format
+            temp_img_path = os.path.join(TEMP_DIR, f"ocr_{int(time.time())}.png")
+            os.makedirs(TEMP_DIR, exist_ok=True)
+            
+            # Save as PNG (more reliable than original format)
+            img.save(temp_img_path, 'PNG')
+            
+        except Exception as img_error:
+            logger.error(f"Image validation failed: {img_error}")
+            return {"error": f"Invalid image file: {str(img_error)}"}
+        
         engine = get_ocr_engine()
         if not engine:
             return {"error": "OCR engine not initialized"}
@@ -684,13 +700,22 @@ async def ocr_recognize(file: UploadFile = File(...)):
         # Run OCR - EasyOCR returns list of (bbox, text, confidence)
         result = engine.readtext(temp_img_path)
         
-        # Extract text only
-        full_text = [item[1] for item in result]
+        # Extract text only, filter out low confidence results
+        full_text = []
+        for item in result:
+            if len(item) >= 3:
+                text = item[1]
+                confidence = item[2]
+                # Only include results with >0.1 confidence
+                if confidence > 0.1 and text.strip():
+                    full_text.append(text)
         
         return {"text": "\n".join(full_text)}
         
     except Exception as e:
         logger.error(f"OCR Error: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
         return {"error": str(e)}
     finally:
         if temp_img_path and os.path.exists(temp_img_path):
