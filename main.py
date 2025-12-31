@@ -622,19 +622,34 @@ def get_ocr_engine():
     if ocr_engine is None and OCR_ENABLED:
         logger.info("Initializing EasyOCR (Chinese + English)...")
         try:
-            # Check for bundled models
-            model_dir = get_resource_path("easyocr_models")
+            # Check for models in multiple locations (priority order)
+            # 1. External folder (same directory as exe or script)
+            external_model_dir = os.path.join(CWD, "easyocr_models")
+            # 2. Bundled folder (inside exe, for backward compatibility)
+            bundled_model_dir = get_resource_path("easyocr_models")
             
-            if os.path.exists(model_dir):
+            model_dir = None
+            if os.path.exists(external_model_dir):
+                model_dir = external_model_dir
+                logger.info(f"Using external models from: {model_dir}")
+            elif os.path.exists(bundled_model_dir):
+                model_dir = bundled_model_dir
                 logger.info(f"Using bundled models from: {model_dir}")
-                # Use bundled models
+            
+            # Suppress progress bars and verbose output
+            import warnings
+            warnings.filterwarnings('ignore')
+            
+            if model_dir:
+                # Use local models
                 ocr_engine = easyocr.Reader(
                     ['ch_sim', 'en'], 
                     gpu=False,
-                    model_storage_directory=model_dir
+                    model_storage_directory=model_dir,
+                    download_enabled=False  # Don't download, use local only
                 )
             else:
-                logger.info("Bundled models not found, will auto-download...")
+                logger.info("Models not found, will auto-download (requires internet)...")
                 # Auto-download models (requires internet)
                 ocr_engine = easyocr.Reader(['ch_sim', 'en'], gpu=False)
             
