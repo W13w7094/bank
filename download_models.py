@@ -51,7 +51,7 @@ def main():
     for model_type, info in MODELS.items():
         download_and_extract(info["url"], output_dir)
     
-    print("\n✓ Model download complete!")
+    print("\n[OK] Model download complete!")
     print(f"Models saved to: {os.path.abspath(output_dir)}")
     
     # List downloaded files
