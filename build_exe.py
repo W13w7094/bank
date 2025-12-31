@@ -21,8 +21,8 @@ args = [
     '--add-data=data.json;.',
     '--add-data=branches.json;.',
     
-    # Include Frontend (Assumes 'npm run build' has run and 'frontend/dist' exists)
-    '--add-data=frontend/dist;frontend/dist',
+    # Include Frontend (Pack 'frontend/dist' into 'static' for backend)
+    '--add-data=frontend/dist;static',
     
     # Hidden imports that might be missed
     '--hidden-import=uvicorn',
