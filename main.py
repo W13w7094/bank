@@ -620,8 +620,8 @@ def get_ocr_engine():
     global ocr_engine
     if ocr_engine is None and OCR_ENABLED:
         logger.info("Initializing PaddleOCR engine...")
-        # use_angle_cls=True auto downloads models if not present
-        ocr_engine = PaddleOCR(use_angle_cls=True, lang="ch", show_log=False)
+        # use_textline_orientation=True (formerly use_angle_cls) auto downloads models if not present
+        ocr_engine = PaddleOCR(use_textline_orientation=True, lang="ch", show_log=False)
     return ocr_engine
 
 @app.post("/api/ocr")
