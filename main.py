@@ -622,9 +622,22 @@ def get_ocr_engine():
     if ocr_engine is None and OCR_ENABLED:
         logger.info("Initializing EasyOCR (Chinese + English)...")
         try:
-            # EasyOCR with Chinese and English support
-            # First run will download models (~100MB for Chinese)
-            ocr_engine = easyocr.Reader(['ch_sim', 'en'], gpu=False)
+            # Check for bundled models
+            model_dir = get_resource_path("easyocr_models")
+            
+            if os.path.exists(model_dir):
+                logger.info(f"Using bundled models from: {model_dir}")
+                # Use bundled models
+                ocr_engine = easyocr.Reader(
+                    ['ch_sim', 'en'], 
+                    gpu=False,
+                    model_storage_directory=model_dir
+                )
+            else:
+                logger.info("Bundled models not found, will auto-download...")
+                # Auto-download models (requires internet)
+                ocr_engine = easyocr.Reader(['ch_sim', 'en'], gpu=False)
+            
             logger.info("EasyOCR initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize EasyOCR: {e}")
