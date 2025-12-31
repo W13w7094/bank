@@ -43,7 +43,7 @@ def main():
         shutil.copytree(model_storage, output_dir)
         
         print("[OK] Models ready for bundling!")
-       print(f"Bundle directory: {os.path.abspath(output_dir)}")
+        print(f"Bundle directory: {os.path.abspath(output_dir)}")
         
         # List files
         print("Bundled files:")
