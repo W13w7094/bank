@@ -606,35 +606,28 @@ async def generate_contract(data: ContractRequest):
     finally:
         if os.path.exists(temp_dir): shutil.rmtree(temp_dir)
 
-# --- OCR Module (Offline, Minimal) ---
+# --- OCR Module (EasyOCR - Simple & Reliable) ---
 try:
-    from paddleocr import PaddleOCR
+    import easyocr
     OCR_ENABLED = True
 except ImportError:
     OCR_ENABLED = False
-    logger.warning("PaddleOCR not installed. OCR features disabled.")
+    logger.warning("EasyOCR not installed. OCR features disabled.")
 
 ocr_engine = None
 
 def get_ocr_engine():
-    """Initialize PaddleOCR with default Chinese models"""
+    """Initialize EasyOCR with Chinese support"""
     global ocr_engine
     if ocr_engine is None and OCR_ENABLED:
-        logger.info("Initializing PaddleOCR (Chinese, no angle classification)...")
-        
-        # Suppress PaddleOCR logging
-        import logging
-        logging.getLogger('ppocr').setLevel(logging.ERROR)
-        
+        logger.info("Initializing EasyOCR (Chinese + English)...")
         try:
-            # Use default models - PaddleOCR will auto-download if needed
-            ocr_engine = PaddleOCR(
-                use_angle_cls=False,  # Disable angle classification for speed
-                lang="ch"  # Chinese
-            )
-            logger.info("PaddleOCR initialized successfully")
+            # EasyOCR with Chinese and English support
+            # First run will download models (~100MB for Chinese)
+            ocr_engine = easyocr.Reader(['ch_sim', 'en'], gpu=False)
+            logger.info("EasyOCR initialized successfully")
         except Exception as e:
-            logger.error(f"Failed to initialize PaddleOCR: {e}")
+            logger.error(f"Failed to initialize EasyOCR: {e}")
             return None
             
     return ocr_engine
@@ -660,15 +653,11 @@ async def ocr_recognize(file: UploadFile = File(...)):
         if not engine:
             return {"error": "OCR engine not initialized"}
 
-        # Run OCR
-        result = engine.ocr(temp_img_path)
+        # Run OCR - EasyOCR returns list of (bbox, text, confidence)
+        result = engine.readtext(temp_img_path)
         
-        full_text = []
-        if result and result[0]:
-            for line in result[0]:
-                if len(line) >= 2 and len(line[1]) >= 1:
-                    text = line[1][0]
-                    full_text.append(text)
+        # Extract text only
+        full_text = [item[1] for item in result]
         
         return {"text": "\n".join(full_text)}
         

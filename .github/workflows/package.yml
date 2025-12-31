@@ -34,10 +34,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pyinstaller paddlepaddle==2.6.2 paddleocr
-        
-    - name: Download OCR Models
-      run: python download_models.py
+        pip install pyinstaller easyocr
         
     - name: Build EXE
       run: python build_exe.py
