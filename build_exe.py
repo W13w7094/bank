@@ -40,7 +40,6 @@ args = [
     '--hidden-import=uvicorn.protocols.http.auto',
     '--hidden-import=uvicorn.lifespan',
     '--hidden-import=uvicorn.lifespan.on',
-    '--hidden-import=paddleocr',
 ]
 
 print("Building executable...")
