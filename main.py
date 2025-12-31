@@ -617,14 +617,12 @@ except ImportError:
 ocr_engine = None
 
 def get_ocr_engine():
-    """Initialize minimal OCR engine (detection + recognition only, no angle classification)"""
+    """Initialize minimal OCR engine"""
     global ocr_engine
     if ocr_engine is None and OCR_ENABLED:
         logger.info("Initializing PaddleOCR (Minimal Offline Mode)...")
         
         base_model_dir = get_resource_path("ocr_models")
-        
-        # Use lightweight slim models
         det_dir = os.path.join(base_model_dir, "ch_PP-OCRv3_det_slim_infer")
         rec_dir = os.path.join(base_model_dir, "ch_PP-OCRv4_rec_infer")
         
@@ -636,15 +634,20 @@ def get_ocr_engine():
         
         if use_bundled:
             logger.info(f"Using bundled models: {base_model_dir}")
-            ocr_engine = PaddleOCR(
-                use_angle_cls=False,
-                lang="ch",
-                det_model_dir=det_dir,
-                rec_model_dir=rec_dir
-            )
+            try:
+                ocr_engine = PaddleOCR(
+                    use_angle_cls=False,
+                    lang="ch",
+                    det_model_dir=det_dir,
+                    rec_model_dir=rec_dir
+                )
+            except Exception as e:
+                logger.error(f"Failed to load bundled models: {e}")
+                logger.info("Falling back to default models...")
+                ocr_engine = PaddleOCR(use_angle_cls=False, lang="ch")
         else:
-            logger.warning("Models not found. OCR unavailable in offline mode.")
-            return None
+            logger.warning("Models not found. Using default PaddleOCR models (requires internet)...")
+            ocr_engine = PaddleOCR(use_angle_cls=False, lang="ch")
             
     return ocr_engine
 
@@ -669,8 +672,8 @@ async def ocr_recognize(file: UploadFile = File(...)):
         if not engine:
             return {"error": "OCR engine not initialized"}
 
-        # Run OCR (cls=False to skip angle classification)
-        result = engine.ocr(temp_img_path, cls=False)
+        # Run OCR
+        result = engine.ocr(temp_img_path)
         
         full_text = []
         if result and result[0]:
