@@ -643,13 +643,11 @@ def get_ocr_engine():
                 lang="ch",
                 det_model_dir=det_dir,
                 rec_model_dir=rec_dir,
-                cls_model_dir=cls_dir,
-                use_gpu=False,
-                show_log=False # Attempt to suppress log if version allows, else might warn
+                cls_model_dir=cls_dir
             )
         else:
             logger.warning("Bundled models not found. Attempting auto-download (Internet required)...")
-            ocr_engine = PaddleOCR(use_angle_cls=True, lang="ch", use_gpu=False)
+            ocr_engine = PaddleOCR(use_angle_cls=True, lang="ch")
             
     return ocr_engine
 
