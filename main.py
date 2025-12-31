@@ -139,6 +139,9 @@ class Collateral(BaseModel):
     location: str = ""
     value: float = 0
     area: str = ""
+    land_area: str = ""  # New field: 土地使用面积
+    value_cn: str = ""   # New field: 大写金额
+
 
 class ContractRequest(BaseModel):
     customer_type: str = "personal"
@@ -266,6 +269,8 @@ def generate_smart_report(data: ContractRequest):
         p.age = calculate_age(p.id_card)
     for p in data.guarantors:
         p.age = calculate_age(p.id_card)
+    for c in data.collaterals:
+        c.value_cn = num_to_cn(c.value)
 
     lines = []
     # --- Part 1: 人类可读部分 (用于复制粘贴) ---
@@ -302,8 +307,8 @@ def generate_smart_report(data: ContractRequest):
         lines.append("")
         lines.append(f"【抵押物 ({len(data.collaterals)})】")
         for i, c in enumerate(data.collaterals):
-            lines.append(f"{i+1}. {c.owner} | {c.type} | {c.location} | 价值:{c.value}")
-            lines.append(f"   权证：{c.cert_no} | 面积/数量：{c.area}")
+            lines.append(f"{i+1}. {c.owner} | {c.type} | {c.location} | 价值:{c.value} ({c.value_cn})")
+            lines.append(f"   权证：{c.cert_no} | 建筑面积：{c.area} | 土地面积：{c.land_area}")
     
     if data.guarantors:
         lines.append("")
@@ -416,6 +421,7 @@ async def generate_contract(data: ContractRequest):
     for i in range(5):
         if context.get('collaterals') and i < len(context['collaterals']):
             c = context['collaterals'][i]
+            c['value_cn'] = num_to_cn(c.get('value', 0))
             context[f'collateral{i+1}'] = c
         else:
             context[f'collateral{i+1}'] = {}
