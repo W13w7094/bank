@@ -275,3 +275,4 @@
 2025-12-31 15:35:02,401 - uvicorn.access - INFO - 127.0.0.1:52764 - "GET /api/branches HTTP/1.1" 200
 2025-12-31 15:35:02,402 - uvicorn.access - INFO - 127.0.0.1:52765 - "GET /api/config HTTP/1.1" 200
 2025-12-31 15:35:13,278 - uvicorn.access - INFO - 127.0.0.1:52765 - "POST /api/ocr HTTP/1.1" 200
+2025-12-31 15:35:37,981 - uvicorn.access - INFO - 127.0.0.1:52824 - "POST /api/ocr HTTP/1.1" 200
