@@ -1,71 +1,58 @@
 """
-Download EasyOCR models for offline use.
-Downloads Chinese Simplified and English models.
+Download EasyOCR models using the official EasyOCR downloader.
+This ensures we get the correct models that EasyOCR expects.
 """
 
 import os
-import urllib.request
-import zipfile
 import shutil
 
-# EasyOCR model URLs
-MODELS = {
-    "detector": {
-        "url": "https://github.com/JaidedAI/EasyOCR/releases/download/v1.3/craft_mlt_25k.zip",
-        "filename": "craft_mlt_25k.zip"
-    },
-    "zh_sim": {
-        "url": "https://github.com/JaidedAI/EasyOCR/releases/download/v1.3/chinese_sim.zip", 
-        "filename": "chinese_sim.zip"
-    },
-    "en": {
-        "url": "https://github.com/JaidedAI/EasyOCR/releases/download/v1.3/english.zip",
-        "filename": "english.zip"
-    }
-}
-
-def download_file(url, filepath):
-    """Download file with progress"""
-    print(f"Downloading {os.path.basename(filepath)}...")
-    urllib.request.urlretrieve(url, filepath)
-    print(f"Done: {os.path.basename(filepath)}")
-
-def extract_zip(filepath, output_dir):
-    """Extract zip file"""
-    print(f"Extracting {os.path.basename(filepath)}...")
-    with zipfile.ZipFile(filepath, 'r') as zip_ref:
-        zip_ref.extractall(output_dir)
-    os.remove(filepath)
-    print(f"Extracted: {os.path.basename(filepath)}")
-
 def main():
-    output_dir = "easyocr_models"
+    print("Downloading EasyOCR models using official method...")
+    print("This will download models to the default EasyOCR location.")
     
-    # Create output directory
-    if os.path.exists(output_dir):
-        print(f"Removing existing {output_dir}...")
-        shutil.rmtree(output_dir)
+    try:
+        import easyocr
+        
+        # Initialize reader - this will download models automatically
+        print("Initializing EasyOCR to download models...")
+        reader = easyocr.Reader(['ch_sim', 'en'], gpu=False, download_enabled=True)
+        
+        print("\n[OK] Models downloaded successfully!")
+        print("EasyOCR will use these models from its cache.")
+        
+        # Get the model directory
+        model_storage = reader.model_storage_directory
+        print(f"\nModels stored in: {model_storage}")
+        
+        # Copy models to our bundle directory
+        output_dir = "easyocr_models"
+        if os.path.exists(output_dir):
+            shutil.rmtree(output_dir)
+        
+        print(f"\nCopying models to {output_dir} for bundling...")
+        shutil.copytree(model_storage, output_dir)
+        
+        print(f"\n[OK] Models ready for bundling!")
+        print(f"Bundle directory: {os.path.abspath(output_dir)}")
+        
+        # List files
+        print("\nBundled files:")
+        for root, dirs, files in os.walk(output_dir):
+            for file in files:
+                rel_path = os.path.relpath(os.path.join(root, file), output_dir)
+                print(f"  - {rel_path}")
+        
+    except ImportError:
+        print("ERROR: EasyOCR not installed!")
+        print("Please run: pip install easyocr")
+        return 1
+    except Exception as e:
+        print(f"ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        return 1
     
-    os.makedirs(output_dir, exist_ok=True)
-    
-    print("Downloading EasyOCR models (detector + Chinese + English)...")
-    
-    for model_name, info in MODELS.items():
-        filepath = os.path.join(output_dir, info["filename"])
-        try:
-            download_file(info["url"], filepath)
-            extract_zip(filepath, output_dir)
-        except Exception as e:
-            print(f"Error downloading {model_name}: {e}")
-            print("Continuing anyway...")
-    
-    print("\n[OK] Model download complete!")
-    print(f"Models saved to: {os.path.abspath(output_dir)}")
-    
-    # List downloaded files
-    print("\nDownloaded models:")
-    for item in os.listdir(output_dir):
-        print(f"  - {item}")
+    return 0
 
 if __name__ == "__main__":
-    main()
+    exit(main())
