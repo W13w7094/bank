@@ -617,37 +617,25 @@ except ImportError:
 ocr_engine = None
 
 def get_ocr_engine():
-    """Initialize minimal OCR engine"""
+    """Initialize PaddleOCR with default Chinese models"""
     global ocr_engine
     if ocr_engine is None and OCR_ENABLED:
-        logger.info("Initializing PaddleOCR (Minimal Offline Mode)...")
+        logger.info("Initializing PaddleOCR (Chinese, no angle classification)...")
         
-        base_model_dir = get_resource_path("ocr_models")
-        det_dir = os.path.join(base_model_dir, "ch_PP-OCRv3_det_slim_infer")
-        rec_dir = os.path.join(base_model_dir, "ch_PP-OCRv4_rec_infer")
-        
-        use_bundled = os.path.exists(det_dir) and os.path.exists(rec_dir)
-        
-        # Suppress PaddleOCR warnings
+        # Suppress PaddleOCR logging
         import logging
         logging.getLogger('ppocr').setLevel(logging.ERROR)
         
-        if use_bundled:
-            logger.info(f"Using bundled models: {base_model_dir}")
-            try:
-                ocr_engine = PaddleOCR(
-                    use_angle_cls=False,
-                    lang="ch",
-                    det_model_dir=det_dir,
-                    rec_model_dir=rec_dir
-                )
-            except Exception as e:
-                logger.error(f"Failed to load bundled models: {e}")
-                logger.info("Falling back to default models...")
-                ocr_engine = PaddleOCR(use_angle_cls=False, lang="ch")
-        else:
-            logger.warning("Models not found. Using default PaddleOCR models (requires internet)...")
-            ocr_engine = PaddleOCR(use_angle_cls=False, lang="ch")
+        try:
+            # Use default models - PaddleOCR will auto-download if needed
+            ocr_engine = PaddleOCR(
+                use_angle_cls=False,  # Disable angle classification for speed
+                lang="ch"  # Chinese
+            )
+            logger.info("PaddleOCR initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize PaddleOCR: {e}")
+            return None
             
     return ocr_engine
 
