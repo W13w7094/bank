@@ -1,0 +1,9 @@
+借款合同
+借款人：{{ main_borrower.name }}
+身份证：{{ main_borrower.id_card }}
+金额：{{ loan_amount }} ({{ loan_amount_cn }})
+
+担保人列表：
+{% tr for g in guarantors %}
+{{ g.name }} - {{ g.relation }}
+{% tr endfor %}

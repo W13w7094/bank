@@ -1,0 +1,36 @@
+2025-12-30 21:36:35,210 - BankContract - INFO - 使用外部模板目录: /root/FjnxTools/bank-contract-system/backend/templates
+2025-12-30 21:36:35,211 - BankContract - INFO - 使用外部配置: /root/FjnxTools/bank-contract-system/backend/data.json
+2025-12-30 21:36:35,211 - BankContract - INFO - 使用外部配置: /root/FjnxTools/bank-contract-system/backend/branches.json
+2025-12-30 21:36:35,246 - BankContract - INFO - 服务启动成功，请访问 http://localhost:8000
+2025-12-30 21:48:05,827 - BankContract - INFO - 收到生成请求: personal - 金额: 32312312.0
+2025-12-30 21:51:48,690 - BankContract - INFO - 使用外部模板目录: /root/FjnxTools/bank-contract-system/backend/templates
+2025-12-30 21:51:48,691 - BankContract - INFO - 使用外部配置: /root/FjnxTools/bank-contract-system/backend/data.json
+2025-12-30 21:51:48,691 - BankContract - INFO - 使用外部配置: /root/FjnxTools/bank-contract-system/backend/branches.json
+2025-12-30 21:51:48,726 - BankContract - INFO - 服务启动成功，请访问 http://localhost:8000
+2025-12-30 22:04:11,644 - BankContract - INFO - 收到生成请求: personal - 金额: 800000.0
+2025-12-30 22:11:21,123 - BankContract - INFO - 使用外部模板目录: /root/FjnxTools/bank-contract-system/backend/templates
+2025-12-30 22:11:21,124 - BankContract - INFO - 使用外部配置: /root/FjnxTools/bank-contract-system/backend/data.json
+2025-12-30 22:11:21,124 - BankContract - INFO - 使用外部配置: /root/FjnxTools/bank-contract-system/backend/branches.json
+2025-12-30 22:11:21,143 - BankContract - INFO - 服务启动成功，请访问 http://localhost:8000
+2025-12-30 22:13:22,656 - BankContract - INFO - ====== 收到生成请求 ======
+2025-12-30 22:13:22,657 - BankContract - INFO - 类型: personal | 金额: 550000.0
+2025-12-30 22:13:22,664 - BankContract - INFO - 请求数据(前1000字符): {"customer_type":"personal","loan_type":"guarantee","branch":{"name":"福建漳平农村商业银行股份有限公司菁城支行","manager":"林行长","phone":"0597-7536xxx","address":"漳平市菁城街道xx路"},"main_borrower":{"name":"张伟","id_type":"身份证","id_card":"350802199001011234","mobile":"13498643217","relation":"","address":"福建省漳平市菁城街道101号","gender":"男","birthday":"1990-01-01","ethnicity":"汉族","education":"本科","occupation":"个体工商户"},"spouse":{"name":"李秀英","id_type":"身份证","id_card":"350802199202025678","mobile":"13244298472","relation":"","address":"","gender":"男","birthday":"1992-02-02","ethnicity":"壮族","education":"本科","occupation":"自由职业者"},"enterprise":null,"joint_borrowers":[{"name":"李秀英","id_type":"身份证","id_card":"350802199202025678","mobile":"13244298472","relation":"夫妻","address":"福建省漳平市菁城街道101号","gender":"男","birthday":"1992-02-02","ethnicity":"壮族","education":"本科","occupation":"自由职业者"},{"name":"张小明","id_type":"身份证","id_card":"350802200005051111","mobile":"13700000001","relation":"父子","address":"福建省漳平市菁城街道101号","gender":"男","b...
+2025-12-30 22:31:26,144 - BankContract - INFO - ====== 收到生成请求 ======
+2025-12-30 22:31:26,144 - BankContract - INFO - 类型: personal | 金额: 550000.0
+2025-12-30 22:31:26,144 - BankContract - INFO - 请求数据(前1000字符): {"customer_type":"personal","loan_type":"guarantee","branch":{"name":"福建漳平农村商业银行股份有限公司菁城支行","manager":"林行长","phone":"0597-7536xxx","address":"漳平市菁城街道xx路"},"main_borrower":{"name":"张伟","id_type":"身份证","id_card":"350802199001011234","mobile":"13498643217","relation":"","address":"福建省漳平市菁城街道101号","gender":"男","birthday":"1990-01-01","ethnicity":"汉族","education":"本科","occupation":"个体工商户"},"spouse":{"name":"李秀英","id_type":"身份证","id_card":"350802199202025678","mobile":"13244298472","relation":"","address":"","gender":"男","birthday":"1992-02-02","ethnicity":"壮族","education":"本科","occupation":"自由职业者"},"enterprise":null,"joint_borrowers":[{"name":"李秀英","id_type":"身份证","id_card":"350802199202025678","mobile":"13244298472","relation":"夫妻","address":"福建省漳平市菁城街道101号","gender":"男","birthday":"1992-02-02","ethnicity":"壮族","education":"本科","occupation":"自由职业者"},{"name":"张小明","id_type":"身份证","id_card":"350802200005051111","mobile":"13700000001","relation":"父子","address":"福建省漳平市菁城街道101号","gender":"男","b...
+2025-12-30 22:45:22,148 - BankContract - INFO - 使用外部模板目录: /root/FjnxTools/bank-contract-system/backend/templates
+2025-12-30 22:45:22,148 - BankContract - INFO - 使用外部配置: /root/FjnxTools/bank-contract-system/backend/data.json
+2025-12-30 22:45:22,148 - BankContract - INFO - 使用外部配置: /root/FjnxTools/bank-contract-system/backend/branches.json
+2025-12-30 22:45:22,166 - BankContract - INFO - 服务启动成功，请访问 http://localhost:8000
+2025-12-30 22:48:11,336 - BankContract - INFO - ====== 收到生成请求 ======
+2025-12-30 22:48:11,337 - BankContract - INFO - 类型: personal | 金额: 550000.0
+2025-12-30 22:48:11,337 - BankContract - INFO - 请求数据(前1000字符): {"customer_type":"personal","loan_type":"guarantee","branch":{"name":"福建漳平农村商业银行股份有限公司菁城支行","manager":"林行长","phone":"0597-7536xxx","address":"漳平市菁城街道xx路"},"main_borrower":{"name":"张伟","id_type":"身份证","id_card":"350802199001011234","mobile":"13498643217","relation":"","address":"福建省漳平市菁城街道101号","gender":"男","birthday":"1990-01-01","ethnicity":"汉族","education":"本科","occupation":"个体工商户"},"spouse":{"name":"李秀英","id_type":"身份证","id_card":"350802199202025678","mobile":"13244298472","relation":"","address":"","gender":"男","birthday":"1992-02-02","ethnicity":"壮族","education":"本科","occupation":"自由职业者"},"enterprise":null,"joint_borrowers":[{"name":"李秀英","id_type":"身份证","id_card":"350802199202025678","mobile":"13244298472","relation":"夫妻","address":"福建省漳平市菁城街道101号","gender":"男","birthday":"1992-02-02","ethnicity":"壮族","education":"本科","occupation":"自由职业者"},{"name":"张小明","id_type":"身份证","id_card":"350802200005051111","mobile":"13700000001","relation":"父子","address":"福建省漳平市菁城街道101号","gender":"男","b...
+2025-12-31 08:52:26,254 - BankContract - INFO - 使用外部模板目录: /Users/w13w/Downloads/backend_pkg/templates
+2025-12-31 08:52:26,254 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/data.json
+2025-12-31 08:52:26,254 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/branches.json
+2025-12-31 08:52:26,297 - BankContract - INFO - 服务启动成功，请访问 http://localhost:8000
+2025-12-31 08:57:43,439 - BankContract - INFO - 使用外部模板目录: /Users/w13w/Downloads/backend_pkg/templates
+2025-12-31 08:57:43,439 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/data.json
+2025-12-31 08:57:43,439 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/branches.json
+2025-12-31 08:57:43,439 - BankContract - INFO - Check mode: using dist directory: /Users/w13w/Downloads/backend_pkg/dist
+2025-12-31 08:57:43,469 - BankContract - INFO - 服务启动成功，请访问 http://localhost:8000

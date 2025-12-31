@@ -1,0 +1,113 @@
+{
+    "options": {
+        "education": [
+            "初中及以下",
+            "高中",
+            "中专",
+            "大专",
+            "本科",
+            "硕士及以上"
+        ],
+        "ethnicity": [
+            "汉族",
+            "畲族",
+            "壮族",
+            "苗族",
+            "回族",
+            "维吾尔族",
+            "土家族",
+            "彝族",
+            "蒙古族",
+            "藏族",
+            "布依族",
+            "侗族",
+            "瑶族",
+            "白族",
+            "哈尼族",
+            "黎族",
+            "满族",
+            "其他"
+        ],
+        "occupation": [
+            "农户 (种植/养殖)",
+            "个体工商户",
+            "小微企业主",
+            "企事业单位员工",
+            "公务员",
+            "自由职业者",
+            "退休人员",
+            "其他"
+        ],
+        "loan_use": [
+            "借新还旧",
+            "无还本续贷",
+            "资产重组",
+            "短期流动资金周转",
+            "支付货款/原材料款",
+            "购买肥料/饲料/种子",
+            "购买农机具/设施农业建设",
+            "农产品收购",
+            "扩大经营规模",
+            "店铺装修/经营场所改造",
+            "住房装修",
+            "购买大额耐用消费品",
+            "日常消费"
+        ]
+    },
+    "templates": [
+        {
+            "label": "个人借款合同 (标准版)",
+            "filename": "loan_contract_person.docx",
+            "type": "personal",
+            "need_guarantee": false
+        },
+        {
+            "label": "流动资金借款合同 (对公/企业)",
+            "filename": "loan_contract_ent.docx",
+            "type": "enterprise",
+            "need_guarantee": false
+        },
+        {
+            "label": "借新还旧协议书",
+            "filename": "refinance_agreement.docx",
+            "type": "both",
+            "need_guarantee": false
+        },
+        {
+            "label": "无还本续贷承诺书",
+            "filename": "renewal_promise.docx",
+            "type": "both",
+            "need_guarantee": false
+        },
+        {
+            "label": "共同借款承诺书",
+            "filename": "joint_promise.docx",
+            "type": "both",
+            "need_guarantee": false
+        },
+        {
+            "label": "最高额保证合同 (担保人用)",
+            "filename": "guarantee.docx",
+            "type": "both",
+            "need_guarantee": true
+        },
+        {
+            "label": "最高额抵押合同",
+            "filename": "mortgage.docx",
+            "type": "both",
+            "need_guarantee": true
+        },
+        {
+            "label": "配偶同意声明书",
+            "filename": "spouse_consent.docx",
+            "type": "personal",
+            "need_guarantee": false
+        },
+        {
+            "label": "贷款审批简表 (Excel导出)",
+            "filename": "approval_sheet.xlsx",
+            "type": "personal",
+            "need_guarantee": false
+        }
+    ]
+}
