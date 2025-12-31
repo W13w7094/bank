@@ -172,51 +172,148 @@ def num_to_cn(num):
     if num == 0:
         return "零元整"
     
-    # 中文数字
     CN_NUM = ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖']
-    CN_UNIT = ['', '拾', '佰', '仟', '万', '拾', '佰', '仟', '亿']
+    CN_UNIT = ['', '拾', '佰', '仟']
+    CN_SECTION = ['', '万', '亿', '兆']
     
     # 分离整数和小数部分
     int_part = int(num)
-    decimal_part = round((num - int_part) * 100)  # 转为分
+    decimal_part = round((num - int_part) * 100)
     
-    # 将数字转为字符串并反转以方便处理
-    str_num = str(int_part)[::-1]  # 反转，从低位开始
-    result = ''
+    # 处理整数部分
+    str_num = str(int_part)
+    result = ""
     
-    for i, digit in enumerate(str_num):
-        d = int(digit)
-        if d != 0:
-            result = CN_NUM[d] + CN_UNIT[i] + result
+    # 分段处理，从低位到高位，每4位一段
+    # 倒序处理
+    reversed_str = str_num[::-1]
+    sections = [reversed_str[i:i+4] for i in range(0, len(reversed_str), 4)]
+    
+    for section_idx, section in enumerate(sections):
+        section_result = ""
+        section_zero = True # 本节是否全0
+        
+        # 处理每一节，section是倒序的，如 1234 -> 4321
+        for i, digit in enumerate(section):
+            d = int(digit)
+            if d != 0:
+                section_zero = False
+                # 如果前面有0（高位有0），且当前位不是0，需要补零
+                # 但这里的逻辑是倒序构造，result = digit + unit + result
+                # 比较复杂，不如正序处理每一节
+                pass
+    
+    # 重写逻辑：正序
+    int_str = str(int_part)
+    length = len(int_str)
+    result = ""
+    zero = False # 前面是否有零需要补
+    
+    # 这种逐位处理逻辑对于 "万" 的插入比较麻烦
+    # 采用 section 分割法 (Low to High)
+    
+    sections = []
+    temp_str = int_str
+    while len(temp_str) > 0:
+        sections.append(temp_str[-4:])
+        temp_str = temp_str[:-4]
+        
+    chinese_sections = []
+    for idx, section in enumerate(sections):
+        if int(section) == 0:
+            # 如果本节是0，且不是最低节，且如果前面还有更高的节...
+            # 这里先存空，最后处理零的连接
+            if idx == 0: # 个位节全0
+                chinese_sections.append("")
+                continue
+            else:
+                # 高位节全0，如 1 0000 0001 的中间万位
+                # 需要补零吗？ 1亿零1元。
+                # 这种情况下，万位不仅不加万，还要作为零处理。
+                chinese_sections.append("零") # 占位
+                continue
+        
+        # 处理非0节
+        sect_res = ""
+        zero_flag = False # 节内零
+        
+        # 补齐4位方便处理？不，直接处理
+        # "0101" -> 101. 
+        # section is string. e.g. "101"
+        for i in range(len(section)):
+            d = int(section[i])
+            # 单位位置：倒数第几位
+            p = len(section) - 1 - i 
+            
+            if d == 0:
+                zero_flag = True
+            else:
+                if zero_flag:
+                    sect_res += CN_NUM[0]
+                    zero_flag = False
+                sect_res += CN_NUM[d] + CN_UNIT[p]
+        
+        # 如果本节有值，加上节单位
+        if sect_res:
+             # 处理 "10" -> "YiShi" or "Shi". Standard "YiShi".
+             # 特殊处理：如果是 10-19，且是最高位... 还是保留壹拾吧，标准。
+             pass
+        
+        if sect_res:
+            sect_res += CN_SECTION[idx]
+        
+        chinese_sections.append(sect_res)
+        
+    # 合并
+    # sections 是从低到高 [个位节, 万位节, 亿位节]
+    # 需要反转回来拼接
+    # 还需要处理节与节之间的零
+    
+    final_res = ""
+    # 从高到低遍历
+    for i in range(len(chinese_sections) - 1, -1, -1):
+        part = chinese_sections[i]
+        if part == "零":
+            # 只有当后面还有内容，且 final_res 不以零结尾时才加零？
+            if final_res and not final_res.endswith("零"):
+                final_res += "零"
         else:
-            # 只在需要时添加零
-            if result and not result.startswith('零'):
-                result = '零' + result
+            if part:
+                # 如果这个部分非空，且前面有值，且本部分原值（int）小于1000（意味着有前导0），需要补零？
+                # e.g. 1 0001 -> 1 section="1", 2 section="1". "YiWan" + "Yi". -> "YiWanLingYi".
+                # 检查 section 原始值
+                original_val = sections[i]
+                if len(original_val) == 4 and original_val.startswith('0') and final_res:
+                     if not final_res.endswith("零"):
+                         final_res += "零"
+                
+                final_res += part
     
-    # 清除末尾的零和多余的零
-    result = result.strip('零')
+    result = final_res
     
-    # 添加“元”
-    if result:
-        result += '元'
+    # 清除末尾零
+    result = result.rstrip('零')
+    if not result: result = CN_NUM[0]
+    
+    if result != "零":
+        result += "元"
     else:
-        result = '零元'
-    
-    # 处理角分
+        result = "零元"
+        
+    # 小数
     if decimal_part > 0:
         jiao = decimal_part // 10
         fen = decimal_part % 10
-        
         if jiao > 0:
             result += CN_NUM[jiao] + '角'
-        elif fen > 0:
+        elif fen > 0 and int_part > 0:
             result += '零'
-        
+            
         if fen > 0:
             result += CN_NUM[fen] + '分'
     else:
         result += '整'
-    
+        
     return result
 
 def format_date_cn(date_str):
