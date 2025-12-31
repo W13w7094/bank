@@ -9,52 +9,51 @@ if sys.stdout.encoding != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 def build():
-    print("🚀 开始构建 Windows 可执行文件...")
+    print(">>> Starting Windows build...")
 
-    # 1. 检查前端构建资源
+    # 1. Check frontend resources
     current_dir = os.path.dirname(os.path.abspath(__file__))
     frontend_dist = os.path.join(os.path.dirname(current_dir), 'frontend', 'dist')
     backend_static = os.path.join(current_dir, 'static')
 
     if os.path.exists(frontend_dist):
-        print(f"📦 发现前端构建资源 (frontend/dist)，正在复制到 {backend_static}...")
+        print(f">>> Found frontend build (frontend/dist), copying to {backend_static}...")
         if os.path.exists(backend_static):
             shutil.rmtree(backend_static)
         shutil.copytree(frontend_dist, backend_static)
     elif os.path.exists(os.path.join(current_dir, 'dist', 'index.html')):
         # Fallback: Check local dist folder (common in standalone backend packages)
         local_dist = os.path.join(current_dir, 'dist')
-        print(f"📦 发现本地前端资源 ({local_dist})，正在复制到 {backend_static}...")
+        print(f">>> Found local frontend resources ({local_dist}), copying to {backend_static}...")
         if os.path.exists(backend_static):
             shutil.rmtree(backend_static)
         shutil.copytree(local_dist, backend_static)
     else:
-        print("⚠️ 未找到前端构建资源 (frontend/dist 或 ./dist)，打包后的程序将不包含前端页面！")
-        print("💡 建议先在 frontend 目录下运行: npm run build")
+        print("!!! No frontend resources found (frontend/dist or ./dist). Build will rely on external static files.")
 
-    # 2. 清理旧的构建文件
-    print("🧹 清理旧构建文件...")
+    # 2. Clean old build files
+    print(">>> Cleaning old build files...")
     for d in ['build', 'dist']:
         if os.path.exists(d):
             shutil.rmtree(d)
 
-    # 3. 设置分隔符 (Windows使用;)
+    # 3. Separator
     sep = os.pathsep
 
-    # 4. 执行打包
-    print("🔨 正调用 PyInstaller 进行打包...")
+    # 4. PyInstaller
+    print(">>> Calling PyInstaller...")
     PyInstaller.__main__.run([
         'main.py',
         '--name=BankContractSystem',
         '--onefile',
         '--clean',
-        '--noconsole',  # 如果需要看黑窗口日志，去掉这一行
-        # 添加数据文件 (源路径:目标路径)
+        '--noconsole',
+        # Add data files
         f'--add-data=templates{sep}templates',
         f'--add-data=static{sep}static',
         f'--add-data=data.json{sep}.',
         f'--add-data=branches.json{sep}.',
-        # 隐式导入
+        # Hidden imports
         '--hidden-import=uvicorn.logging',
         '--hidden-import=uvicorn.loops',
         '--hidden-import=uvicorn.loops.auto',
@@ -65,10 +64,10 @@ def build():
         '--hidden-import=uvicorn.lifespan.on',
     ])
 
-    print("✅ 打包完成！")
-    print(f"📂 可执行文件位于: {os.path.join(current_dir, 'dist', 'BankContractSystem.exe')}")
+    print(">>> Build Complete!")
+    print(f">>> EXE is located at: {os.path.join(current_dir, 'dist', 'BankContractSystem.exe')}")
 
 if __name__ == "__main__":
     if sys.platform != "win32":
-        print("⚠️以此脚本专为 Windows 环境设计，Linux 下运行可能需要调整参数。")
+        print("Note: This script is designed for Windows. Linux usage may require adjustments.")
     build()
