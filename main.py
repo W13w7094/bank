@@ -408,7 +408,8 @@ async def generate_contract(data: ContractRequest):
             'main_name': data.main_borrower.name, 
             'main_card': data.main_borrower.id_card, 
             'main_addr': data.main_borrower.address,
-            'main_age': calculate_age(data.main_borrower.id_card)
+            'main_age': calculate_age(data.main_borrower.id_card),
+            'main_marital_status': '已婚' if (data.spouse and data.spouse.name) else '未婚'
         })
     if data.spouse:
         context['spouse_age'] = calculate_age(data.spouse.id_card)
