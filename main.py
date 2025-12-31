@@ -457,5 +457,7 @@ if __name__ == "__main__":
     os.makedirs(TEMPLATE_DIR, exist_ok=True)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     logger.info("服务启动成功，请访问 http://localhost:8000")
-    print("✅ 服务启动成功，请访问 http://localhost:8000")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # log_config=None 禁止 Uvicorn 配置自己的日志（它会尝试访问 stdout 导致 noconsole 模式崩溃）
+    # 我们上面已经配置了 logging.basicConfig
+    print(">>> Starting Uvicorn server...")
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_config=None)
