@@ -127,7 +127,10 @@ class Person(BaseModel):
     birthday: str = ""
     ethnicity: str = ""
     education: str = ""
+    ethnicity: str = ""
+    education: str = ""
     occupation: str = ""
+    age: str = ""  # Added for persistence
 
 class Collateral(BaseModel):
     owner: str = ""
@@ -254,25 +257,39 @@ def fill_excel_template(template_path, output_path, context):
 
 # ✨✨✨ 核心逻辑：生成“三明治”报告文件 ✨✨✨
 def generate_smart_report(data: ContractRequest):
+    # 🌟 预先计算 Derived Data 确保写入 JSON
+    if data.main_borrower:
+        data.main_borrower.age = calculate_age(data.main_borrower.id_card)
+    if data.spouse:
+        data.spouse.age = calculate_age(data.spouse.id_card)
+    for p in data.joint_borrowers:
+        p.age = calculate_age(p.id_card)
+    for p in data.guarantors:
+        p.age = calculate_age(p.id_card)
+
     lines = []
     # --- Part 1: 人类可读部分 (用于复制粘贴) ---
     lines.append(f"====== 业务录入辅助报告 ({datetime.now().strftime('%Y-%m-%d')}) ======")
-    lines.append(f"办理支行：{data.branch.name if data.branch else ''}")
+    lines.append(f"办理支行：{data.branch.name if data.branch else ''} ({data.branch.short_name if data.branch else ''})")
     lines.append(f"客户类型：{'企业' if data.customer_type == 'enterprise' else '个人'} ({'信用' if data.loan_type == 'credit' else '担保/抵押'})")
     lines.append(f"贷款金额：{data.loan_amount} 元 ({num_to_cn(data.loan_amount)})")
     lines.append(f"期限用途：{data.loan_term}个月 | {data.loan_use}")
     lines.append("")
 
+    marital_status = "未婚"
+    if data.spouse and data.spouse.name:
+        marital_status = "已婚"
+
     if data.customer_type == 'personal' and data.main_borrower:
         p = data.main_borrower
-        lines.append(f"【主借款人】 {p.name}")
+        lines.append(f"【主借款人】 {p.name} ({p.age}岁 | {marital_status})")
         lines.append(f"证件：{p.id_card}")
         lines.append(f"电话：{p.mobile}")
         lines.append(f"地址：{p.address}")
         lines.append(f"画像：{p.gender} | {p.birthday} | {p.ethnicity} | {p.education} | {p.occupation}")
         if data.spouse:
             s = data.spouse
-            lines.append(f">>> 配偶：{s.name} | {s.id_card} | {s.mobile}")
+            lines.append(f">>> 配偶：{s.name} ({s.age}岁) | {s.id_card} | {s.mobile}")
             lines.append(f"    详情：{s.gender} | {s.birthday} | {s.occupation} | {s.ethnicity} | {s.education}")
     elif data.enterprise:
         e = data.enterprise
@@ -292,7 +309,7 @@ def generate_smart_report(data: ContractRequest):
         lines.append("")
         lines.append(f"【担保人 ({len(data.guarantors)})】")
         for i, g in enumerate(data.guarantors):
-            lines.append(f"{i+1}. {g.name} | {g.id_card} | {g.mobile} | {g.relation}")
+            lines.append(f"{i+1}. {g.name} ({g.age}岁) | {g.id_card} | {g.mobile} | {g.relation}")
             lines.append(f"   详情：{g.gender} | {g.birthday} | {g.occupation} | {g.ethnicity} | {g.education}")
             lines.append(f"   地址：{g.address}")
     
@@ -300,7 +317,7 @@ def generate_smart_report(data: ContractRequest):
         lines.append("")
         lines.append(f"【共同借款人 ({len(data.joint_borrowers)})】")
         for i, j in enumerate(data.joint_borrowers):
-            lines.append(f"{i+1}. {j.name} | {j.id_card} | {j.mobile} | {j.relation}")
+            lines.append(f"{i+1}. {j.name} ({j.age}岁) | {j.id_card} | {j.mobile} | {j.relation}")
             lines.append(f"   详情：{j.gender} | {j.birthday} | {j.occupation} | {j.ethnicity} | {j.education}")
             lines.append(f"   地址：{j.address}")
 
