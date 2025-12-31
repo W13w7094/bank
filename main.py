@@ -617,45 +617,42 @@ except ImportError:
 ocr_engine = None
 
 def get_ocr_engine():
-    """Initialize EasyOCR with Chinese support"""
+    """Initialize EasyOCR with local models only"""
     global ocr_engine
     if ocr_engine is None and OCR_ENABLED:
-        logger.info("Initializing EasyOCR (Chinese + English)...")
+        logger.info("Initializing EasyOCR with local models...")
         try:
-            # Check for models in multiple locations (priority order)
-            # 1. External folder (same directory as exe or script)
-            external_model_dir = os.path.join(CWD, "easyocr_models")
-            # 2. Bundled folder (inside exe, for backward compatibility)
-            bundled_model_dir = get_resource_path("easyocr_models")
+            # Use local models folder ONLY
+            local_model_dir = os.path.join(CWD, "easyocr_models")
             
-            model_dir = None
-            if os.path.exists(external_model_dir):
-                model_dir = external_model_dir
-                logger.info(f"Using external models from: {model_dir}")
-            elif os.path.exists(bundled_model_dir):
-                model_dir = bundled_model_dir
-                logger.info(f"Using bundled models from: {model_dir}")
+            if not os.path.exists(local_model_dir):
+                logger.error(f"Local models folder not found: {local_model_dir}")
+                return None
             
-            # Suppress progress bars and verbose output
+            logger.info(f"Using models from: {local_model_dir}")
+            
+            # List model files
+            model_files = os.listdir(local_model_dir)
+            logger.info(f"Model files: {model_files}")
+            
+            # Suppress warnings
             import warnings
             warnings.filterwarnings('ignore')
             
-            if model_dir:
-                # Use local models
-                ocr_engine = easyocr.Reader(
-                    ['ch_sim', 'en'], 
-                    gpu=False,
-                    model_storage_directory=model_dir,
-                    download_enabled=False  # Don't download, use local only
-                )
-            else:
-                logger.info("Models not found, will auto-download (requires internet)...")
-                # Auto-download models (requires internet)
-                ocr_engine = easyocr.Reader(['ch_sim', 'en'], gpu=False)
+            # Initialize with local models only - NO auto-download
+            ocr_engine = easyocr.Reader(
+                ['ch_sim', 'en'], 
+                gpu=False,
+                model_storage_directory=local_model_dir,
+                download_enabled=False,
+                verbose=False
+            )
             
-            logger.info("EasyOCR initialized successfully")
+            logger.info("EasyOCR initialized successfully with local models")
         except Exception as e:
             logger.error(f"Failed to initialize EasyOCR: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return None
             
     return ocr_engine
