@@ -164,7 +164,8 @@ const CollateralList = ({ options }: { options: any }) => (
               <Col span={8}><Form.Item {...restField} name={[name, 'type']} label="类型" rules={[RULES.required]}><EditableSelect options={options.collateral_type} /></Form.Item></Col>
               <Col span={8}><Form.Item {...restField} name={[name, 'cert_no']} label="权证编号" rules={[RULES.required]}><Input size="large" /></Form.Item></Col>
               <Col span={24}><Form.Item {...restField} name={[name, 'location']} label="坐落位置" rules={[RULES.required]}><Input size="large" prefix={<HomeOutlined style={{ color: '#ccc' }} />} /></Form.Item></Col>
-              <Col span={12}><Form.Item {...restField} name={[name, 'area']} label="面积/数量"><Input size="large" /></Form.Item></Col>
+              <Col span={12}><Form.Item {...restField} name={[name, 'area']} label="建筑面积" rules={[RULES.required]}><Input size="large" suffix="平方米" /></Form.Item></Col>
+              <Col span={12}><Form.Item {...restField} name={[name, 'land_area']} label="土地面积"><Input size="large" placeholder="如有" suffix="平方米" /></Form.Item></Col>
               <Col span={12}><Form.Item {...restField} name={[name, 'value']} label="抵押物价值" rules={[RULES.required]}><AmountInput /></Form.Item></Col>
             </Row>
           </div>
@@ -440,6 +441,15 @@ function App() {
     if (!hasSpouse) values.spouse = null;
     if (values.start_date) values.start_date = values.start_date.format('YYYY-MM-DD');
     if (values.end_date) values.end_date = values.end_date.format('YYYY-MM-DD');
+
+    // 处理抵押物面积单位
+    if (values.collaterals && Array.isArray(values.collaterals)) {
+      values.collaterals = values.collaterals.map((c: any) => ({
+        ...c,
+        area: c.area && !c.area.includes('平方米') ? `${c.area}平方米` : c.area,
+        land_area: c.land_area && !c.land_area.includes('平方米') ? `${c.land_area}平方米` : c.land_area,
+      }));
+    }
 
     try {
       const response = await axios.post(API_URL, values, { responseType: 'blob' });
