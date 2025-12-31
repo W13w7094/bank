@@ -1,54 +1,63 @@
+"""
+Download minimal PaddleOCR models for offline use.
+Only downloads the essential Chinese OCR models (detection + recognition).
+"""
+
 import os
-import requests
+import urllib.request
 import tarfile
 import shutil
 
-# Model URLs (PP-OCRv4 Lightweight Chinese)
+# Model download URLs (using smaller mobile models for size optimization)
 MODELS = {
-    "det": "https://paddleocr.bj.bcebos.com/PP-OCRv4/chinese/ch_PP-OCRv4_det_infer.tar",
-    "rec": "https://paddleocr.bj.bcebos.com/PP-OCRv4/chinese/ch_PP-OCRv4_rec_infer.tar",
-    "cls": "https://paddleocr.bj.bcebos.com/dygraph_v2.0/ch/ch_ppocr_mobile_v2.0_cls_infer.tar"
+    "det": {
+        "url": "https://paddleocr.bj.bcebos.com/PP-OCRv3/chinese/ch_PP-OCRv3_det_slim_infer.tar",
+        "dir": "ch_PP-OCRv3_det_slim_infer"
+    },
+    "rec": {
+        "url": "https://paddleocr.bj.bcebos.com/PP-OCRv4/chinese/ch_PP-OCRv4_rec_infer.tar",
+        "dir": "ch_PP-OCRv4_rec_infer"
+    }
 }
 
-TARGET_DIR = os.path.join(os.path.dirname(__file__), "ocr_models")
-
-def download_and_extract(url, target_dir):
+def download_and_extract(url, output_dir):
+    """Download and extract tar file"""
     filename = url.split("/")[-1]
-    filepath = os.path.join(target_dir, filename)
+    filepath = os.path.join(output_dir, filename)
     
-    # Download
     print(f"Downloading {filename}...")
-    response = requests.get(url, stream=True)
-    if response.status_code == 200:
-        with open(filepath, 'wb') as f:
-            f.write(response.content)
-    else:
-        print(f"Failed to download {url}")
-        return
-
-    # Extract
+    urllib.request.urlretrieve(url, filepath)
+    
     print(f"Extracting {filename}...")
-    if filename.endswith(".tar"):
-        with tarfile.open(filepath) as tar:
-            tar.extractall(path=target_dir)
-            
-    # Cleanup tar
+    with tarfile.open(filepath, 'r') as tar:
+        tar.extractall(output_dir)
+    
+    # Clean up tar file
     os.remove(filepath)
+    print(f"Done: {filename}")
 
 def main():
-    if os.path.exists(TARGET_DIR):
-        shutil.rmtree(TARGET_DIR)
-    os.makedirs(TARGET_DIR)
+    output_dir = "ocr_models"
     
-    print(f"Downloading models to {TARGET_DIR}...")
-    for key, url in MODELS.items():
-        download_and_extract(url, TARGET_DIR)
-        
-    print("Download complete.")
+    # Create output directory
+    if os.path.exists(output_dir):
+        print(f"Removing existing {output_dir}...")
+        shutil.rmtree(output_dir)
     
-    # Flatten structure if needed? PaddleOCR expects dir paths.
-    # The tars typically extract to a subdir like 'ch_PP-OCRv4_det_infer/'
-    # We will point code to these subdirs.
+    os.makedirs(output_dir, exist_ok=True)
     
+    print("Downloading minimal OCR models (det + rec only)...")
+    
+    for model_type, info in MODELS.items():
+        download_and_extract(info["url"], output_dir)
+    
+    print("\n✓ Model download complete!")
+    print(f"Models saved to: {os.path.abspath(output_dir)}")
+    
+    # List downloaded files
+    print("\nDownloaded models:")
+    for item in os.listdir(output_dir):
+        print(f"  - {item}")
+
 if __name__ == "__main__":
     main()

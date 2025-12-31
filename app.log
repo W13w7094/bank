@@ -34,3 +34,78 @@
 2025-12-31 08:57:43,439 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/branches.json
 2025-12-31 08:57:43,439 - BankContract - INFO - Check mode: using dist directory: /Users/w13w/Downloads/backend_pkg/dist
 2025-12-31 08:57:43,469 - BankContract - INFO - 服务启动成功，请访问 http://localhost:8000
+2025-12-31 10:42:39,193 - BankContract - INFO - 使用外部模板目录: /Users/w13w/Downloads/backend_pkg/templates
+2025-12-31 10:42:39,193 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/data.json
+2025-12-31 10:42:39,193 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/branches.json
+2025-12-31 10:42:39,193 - BankContract - INFO - Check mode: using dist directory: /Users/w13w/Downloads/backend_pkg/dist
+2025-12-31 10:42:39,226 - BankContract - INFO - 服务启动成功，请访问 http://localhost:8000
+2025-12-31 10:42:39,233 - uvicorn.error - INFO - Started server process [60993]
+2025-12-31 10:42:39,234 - uvicorn.error - INFO - Waiting for application startup.
+2025-12-31 10:42:39,234 - uvicorn.error - INFO - Application startup complete.
+2025-12-31 10:42:39,234 - uvicorn.error - ERROR - [Errno 48] error while attempting to bind on address ('0.0.0.0', 8000): address already in use
+2025-12-31 10:42:39,234 - uvicorn.error - INFO - Waiting for application shutdown.
+2025-12-31 10:42:39,234 - uvicorn.error - INFO - Application shutdown complete.
+2025-12-31 10:42:44,450 - BankContract - INFO - 使用外部模板目录: /Users/w13w/Downloads/backend_pkg/templates
+2025-12-31 10:42:44,450 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/data.json
+2025-12-31 10:42:44,450 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/branches.json
+2025-12-31 10:42:44,450 - BankContract - INFO - Check mode: using dist directory: /Users/w13w/Downloads/backend_pkg/dist
+2025-12-31 10:42:44,475 - BankContract - INFO - 服务启动成功，请访问 http://localhost:8000
+2025-12-31 10:42:44,481 - uvicorn.error - INFO - Started server process [61057]
+2025-12-31 10:42:44,481 - uvicorn.error - INFO - Waiting for application startup.
+2025-12-31 10:42:44,482 - uvicorn.error - INFO - Application startup complete.
+2025-12-31 10:42:44,482 - uvicorn.error - ERROR - [Errno 48] error while attempting to bind on address ('0.0.0.0', 8000): address already in use
+2025-12-31 10:42:44,482 - uvicorn.error - INFO - Waiting for application shutdown.
+2025-12-31 10:42:44,482 - uvicorn.error - INFO - Application shutdown complete.
+2025-12-31 11:17:07,240 - BankContract - INFO - 使用外部模板目录: /Users/w13w/Downloads/backend_pkg/templates
+2025-12-31 11:17:07,240 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/data.json
+2025-12-31 11:17:07,240 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/branches.json
+2025-12-31 11:17:07,241 - BankContract - INFO - Check mode: using dist directory: /Users/w13w/Downloads/backend_pkg/dist
+2025-12-31 11:17:07,271 - BankContract - INFO - 服务启动成功，请访问 http://localhost:8000
+2025-12-31 11:17:07,279 - uvicorn.error - INFO - Started server process [62988]
+2025-12-31 11:17:07,279 - uvicorn.error - INFO - Waiting for application startup.
+2025-12-31 11:17:07,279 - uvicorn.error - INFO - Application startup complete.
+2025-12-31 11:17:07,279 - uvicorn.error - ERROR - [Errno 48] error while attempting to bind on address ('0.0.0.0', 8000): address already in use
+2025-12-31 11:17:07,279 - uvicorn.error - INFO - Waiting for application shutdown.
+2025-12-31 11:17:07,279 - uvicorn.error - INFO - Application shutdown complete.
+2025-12-31 11:17:27,212 - BankContract - INFO - 使用外部模板目录: /Users/w13w/Downloads/backend_pkg/templates
+2025-12-31 11:17:27,212 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/data.json
+2025-12-31 11:17:27,212 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/branches.json
+2025-12-31 11:17:27,212 - BankContract - INFO - Check mode: using dist directory: /Users/w13w/Downloads/backend_pkg/dist
+2025-12-31 11:17:27,236 - BankContract - INFO - 服务启动成功，请访问 http://localhost:8000
+2025-12-31 11:17:27,242 - uvicorn.error - INFO - Started server process [63164]
+2025-12-31 11:17:27,242 - uvicorn.error - INFO - Waiting for application startup.
+2025-12-31 11:17:27,242 - uvicorn.error - INFO - Application startup complete.
+2025-12-31 11:17:27,243 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2025-12-31 11:18:09,518 - uvicorn.access - INFO - 127.0.0.1:51970 - "GET / HTTP/1.1" 200
+2025-12-31 11:18:09,535 - uvicorn.access - INFO - 127.0.0.1:51970 - "GET /assets/index-ahWK-YxV.js HTTP/1.1" 200
+2025-12-31 11:18:09,535 - uvicorn.access - INFO - 127.0.0.1:51971 - "GET /assets/index-CPpYbeCx.css HTTP/1.1" 200
+2025-12-31 11:18:09,654 - uvicorn.access - INFO - 127.0.0.1:51974 - "GET /api/branches HTTP/1.1" 200
+2025-12-31 11:18:09,657 - uvicorn.access - INFO - 127.0.0.1:51975 - "GET /api/config HTTP/1.1" 200
+2025-12-31 11:18:09,657 - uvicorn.access - INFO - 127.0.0.1:51970 - "GET /vite.svg HTTP/1.1" 404
+2025-12-31 14:35:36,656 - uvicorn.error - INFO - Shutting down
+2025-12-31 14:35:36,758 - uvicorn.error - INFO - Waiting for application shutdown.
+2025-12-31 14:35:36,760 - uvicorn.error - INFO - Application shutdown complete.
+2025-12-31 14:35:36,760 - uvicorn.error - INFO - Finished server process [63164]
+2025-12-31 14:35:38,839 - BankContract - INFO - 使用外部模板目录: /Users/w13w/Downloads/backend_pkg/templates
+2025-12-31 14:35:38,839 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/data.json
+2025-12-31 14:35:38,840 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/branches.json
+2025-12-31 14:35:38,854 - BankContract - WARNING - PaddleOCR not installed. OCR features disabled.
+2025-12-31 14:35:38,872 - BankContract - INFO - 服务启动成功，请访问 http://localhost:8000
+2025-12-31 14:35:38,879 - uvicorn.error - INFO - Started server process [66973]
+2025-12-31 14:35:38,879 - uvicorn.error - INFO - Waiting for application startup.
+2025-12-31 14:35:38,880 - uvicorn.error - INFO - Application startup complete.
+2025-12-31 14:35:38,880 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2025-12-31 14:36:37,526 - uvicorn.access - INFO - 127.0.0.1:63359 - "GET /api/branches HTTP/1.1" 200
+2025-12-31 14:36:37,527 - uvicorn.access - INFO - 127.0.0.1:63360 - "GET /api/config HTTP/1.1" 200
+2025-12-31 14:36:37,528 - uvicorn.access - INFO - 127.0.0.1:63359 - "GET /api/branches HTTP/1.1" 200
+2025-12-31 14:36:37,529 - uvicorn.access - INFO - 127.0.0.1:63362 - "GET /api/config HTTP/1.1" 200
+2025-12-31 14:36:56,701 - uvicorn.access - INFO - 127.0.0.1:63393 - "POST /api/ocr HTTP/1.1" 200
+2025-12-31 14:37:45,029 - BankContract - INFO - 使用外部模板目录: /Users/w13w/Downloads/backend_pkg/templates
+2025-12-31 14:37:45,029 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/data.json
+2025-12-31 14:37:45,029 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/branches.json
+2025-12-31 14:37:45,044 - BankContract - WARNING - PaddleOCR not installed. OCR features disabled.
+2025-12-31 14:37:45,063 - BankContract - INFO - 服务启动成功，请访问 http://localhost:8000
+2025-12-31 14:37:45,071 - uvicorn.error - INFO - Started server process [67952]
+2025-12-31 14:37:45,071 - uvicorn.error - INFO - Waiting for application startup.
+2025-12-31 14:37:45,071 - uvicorn.error - INFO - Application startup complete.
+2025-12-31 14:37:45,071 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
