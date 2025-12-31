@@ -36,9 +36,6 @@ jobs:
         pip install -r requirements.txt
         pip install pyinstaller easyocr
         
-    - name: Download EasyOCR Models
-      run: python download_models.py
-        
     - name: Build EXE
       run: python build_exe.py
       
