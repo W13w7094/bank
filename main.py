@@ -641,8 +641,7 @@ def get_ocr_engine():
                 lang="ch",
                 det_model_dir=det_dir,
                 rec_model_dir=rec_dir,
-                use_gpu=False,
-                show_log=False
+                use_gpu=False
             )
         else:
             logger.warning("Models not found. OCR unavailable in offline mode.")
