@@ -221,6 +221,23 @@ def format_date_cn(date_str):
     except:
         return date_str
 
+def calculate_age(id_card):
+    """根据身份证号计算年龄"""
+    if not id_card or len(id_card) != 18:
+        return ""
+    try:
+        birth_year = int(id_card[6:10])
+        birth_month = int(id_card[10:12])
+        birth_day = int(id_card[12:14])
+        
+        today = datetime.now()
+        age = today.year - birth_year
+        if (today.month, today.day) < (birth_month, birth_day):
+            age -= 1
+        return str(age)
+    except:
+        return ""
+
 def fill_excel_template(template_path, output_path, context):
     wb = openpyxl.load_workbook(template_path)
     for sheet in wb.worksheets:
@@ -363,16 +380,20 @@ async def generate_contract(data: ContractRequest):
         if context.get('joint_borrowers') and i < len(context['joint_borrowers']):
             jb = context['joint_borrowers'][i]
             context[f'joint_borrower{i+1}'] = jb
+            context[f'joint_borrower{i+1}_age'] = calculate_age(jb.get('id_card'))
         else:
             context[f'joint_borrower{i+1}'] = {}
+            context[f'joint_borrower{i+1}_age'] = ""
     
     # 担保人最多7个：guarantor1, guarantor2, ..., guarantor7
     for i in range(7):
         if context.get('guarantors') and i < len(context['guarantors']):
             g = context['guarantors'][i]
             context[f'guarantor{i+1}'] = g
+            context[f'guarantor{i+1}_age'] = calculate_age(g.get('id_card'))
         else:
             context[f'guarantor{i+1}'] = {}
+            context[f'guarantor{i+1}_age'] = ""
     
     # 抵押物也展开（假设最多5个）
     for i in range(5):
@@ -383,7 +404,14 @@ async def generate_contract(data: ContractRequest):
             context[f'collateral{i+1}'] = {}
     # 扁平化数据
     if data.main_borrower:
-        context.update({'main_name': data.main_borrower.name, 'main_card': data.main_borrower.id_card, 'main_addr': data.main_borrower.address})
+        context.update({
+            'main_name': data.main_borrower.name, 
+            'main_card': data.main_borrower.id_card, 
+            'main_addr': data.main_borrower.address,
+            'main_age': calculate_age(data.main_borrower.id_card)
+        })
+    if data.spouse:
+        context['spouse_age'] = calculate_age(data.spouse.id_card)
     if data.enterprise:
         context.update({'ent_name': data.enterprise.name, 'ent_code': data.enterprise.credit_code})
     if data.branch:
