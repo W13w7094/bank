@@ -644,8 +644,11 @@ async def ocr_recognize(file: UploadFile = File(...)):
         if not engine:
              return {"error": "OCR engine init failed"}
 
-        # Run OCR
-        result = engine.ocr(temp_img_path, cls=True)
+        # Run OCR (Suppress deprecation warning for ocr() method)
+        import warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
+            result = engine.ocr(temp_img_path, cls=True)
         
         # Parse result
         full_text = []
