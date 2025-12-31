@@ -606,67 +606,51 @@ async def generate_contract(data: ContractRequest):
     finally:
         if os.path.exists(temp_dir): shutil.rmtree(temp_dir)
 
-# --- OCR Module ---
-try:
-    from paddleocr import PaddleOCR
-    OCR_ENABLED = True
-except ImportError:
-    OCR_ENABLED = False
-    logger.warning("PaddleOCR not installed or failed to import. OCR features disabled.")
+# --- OCR Module (Umi-OCR Support) ---
+# Intead of embedding PaddleOCR (huge size, dependency hell), we connect to Umi-OCR API.
+# Umi-OCR should be running on the same machine (or configurable IP).
+import requests
 
-ocr_engine = None
-
-def get_ocr_engine():
-    global ocr_engine
-    if ocr_engine is None and OCR_ENABLED:
-        logger.info("Initializing PaddleOCR engine...")
-        # use_textline_orientation=True (formerly use_angle_cls) auto downloads models if not present
-        ocr_engine = PaddleOCR(use_angle_cls=True, lang="ch")
-    return ocr_engine
+UMI_OCR_URL = "http://127.0.0.1:1224/api/ocr"
 
 @app.post("/api/ocr")
 async def ocr_recognize(file: UploadFile = File(...)):
-    if not OCR_ENABLED:
-        return {"error": "OCR system not available"}
-    
     try:
         contents = await file.read()
+        b64_img = base64.b64encode(contents).decode('utf-8')
         
-        # Save temp file for OCR
-        temp_img_path = os.path.join(TEMP_DIR, f"ocr_{int(time.time())}_{file.filename}")
-        if not os.path.exists(TEMP_DIR):
-            os.makedirs(TEMP_DIR)
-            
-        with open(temp_img_path, "wb") as f:
-            f.write(contents)
-            
-        engine = get_ocr_engine()
-        if not engine:
-             return {"error": "OCR engine init failed"}
-
-        # Run OCR (Suppress deprecation warning for ocr() method)
-        import warnings
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=DeprecationWarning)
-            result = engine.ocr(temp_img_path, cls=True)
+        # Umi-OCR API Payload
+        # Supports: {"base64": "...", "options": {"ocr.language": "ch"}}
+        payload = {
+            "base64": b64_img,
+            "options": {
+                "tbpu.parser": "multi_para", # Output format optimization
+                "data.format": "text",       # Return pure text
+            }
+        }
         
-        # Parse result
-        full_text = []
-        if result and result[0]:
-            for line in result[0]:
-                text = line[1][0]
-                full_text.append(text)
-        
-        # Cleanup
         try:
-            os.remove(temp_img_path)
-        except:
-            pass
+            # Send to Umi-OCR
+            resp = requests.post(UMI_OCR_URL, json=payload, timeout=10)
+            resp.raise_for_status()
             
-        return {"text": "\n".join(full_text)}
-        
+            # Parse Umi-OCR Response
+            # Format: {"code": 100, "data": "Recongized text...", "time": ...}
+            data = resp.json()
+            
+            if data.get("code") == 100 or data.get("code") == 101:
+                return {"text": data.get("data", "")}
+            else:
+                return {"error": f"Umi-OCR Error: {data.get('data')}"}
+                
+        except requests.exceptions.ConnectionError:
+            return {
+                "error": "连接 Umi-OCR 失败。请确保 Umi-OCR 已启动并开启 HTTP 服务 (默认端口 1224)。",
+                "hint": "Start Umi-OCR -> Global Settings -> Advanced -> Allow HTTP Service"
+            }
+            
     except Exception as e:
-        logger.error(f"OCR Error: {str(e)}")
+        logger.error(f"OCR Proxy Error: {str(e)}")
         return {"error": str(e)}
 
 if __name__ == "__main__":

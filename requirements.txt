@@ -5,6 +5,5 @@ docxtpl
 openpyxl
 pyinstaller
 jinja2
-paddlepaddle
-paddleocr
+requests
 
