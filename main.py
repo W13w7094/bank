@@ -105,6 +105,7 @@ async def read_root():
 # --- 数据模型 ---
 class BranchInfo(BaseModel):
     name: str = ""
+    short_name: str = ""  # Added short_name
     manager: str = ""
     phone: str = ""
     address: str = ""
@@ -386,7 +387,11 @@ async def generate_contract(data: ContractRequest):
     if data.enterprise:
         context.update({'ent_name': data.enterprise.name, 'ent_code': data.enterprise.credit_code})
     if data.branch:
-        context.update({'branch_name': data.branch.name})
+        context.update({
+            'branch_name': data.branch.name,
+            'branch_short_name': data.branch.short_name,
+            'branch_short': data.branch.short_name
+        })
 
     task_id = str(int(time.time() * 1000))
     temp_dir = os.path.join(OUTPUT_DIR, task_id)
