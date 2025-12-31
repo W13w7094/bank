@@ -8,6 +8,26 @@ if os.path.exists("dist"):
 if os.path.exists("build"):
     shutil.rmtree("build")
 
+# --- Dynmaic Data Collection for Paddle ---
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules
+# Collect data for paddlex and paddleocr
+paddlex_data = collect_data_files('paddlex')
+paddleocr_data = collect_data_files('paddleocr')
+
+def format_datas(datas):
+    args_list = []
+    sep = ';' 
+    for src, dest in datas:
+        args_list.append(f'--add-data={src}{sep}{dest}')
+    return args_list
+
+extra_data_args = format_datas(paddlex_data + paddleocr_data)
+# Also include our downloaded models
+# ocr_models/ -> ocr_models/
+extra_data_args.append('--add-data=ocr_models;ocr_models')
+
+print(f"Collecting {len(extra_data_args)} extra data files for Paddle...")
+
 # Define build arguments
 args = [
     'main.py',                       # Script to build
@@ -29,7 +49,10 @@ args = [
     '--hidden-import=fastapi',
     '--hidden-import=jinja2',
     '--hidden-import=python-docx',
-]
+    '--hidden-import=paddleocr', 
+    '--hidden-import=paddlex',
+    '--hidden-import=shapely',
+] + extra_data_args
 
 print("Starting Build Process...")
 print(f"Arguments: {args}")

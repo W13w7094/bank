@@ -606,52 +606,106 @@ async def generate_contract(data: ContractRequest):
     finally:
         if os.path.exists(temp_dir): shutil.rmtree(temp_dir)
 
-# --- OCR Module (Umi-OCR Support) ---
-# Intead of embedding PaddleOCR (huge size, dependency hell), we connect to Umi-OCR API.
-# Umi-OCR should be running on the same machine (or configurable IP).
-import requests
+# --- OCR Module (Offline PaddleOCR) ---
+try:
+    from paddleocr import PaddleOCR
+    OCR_ENABLED = True
+except ImportError:
+    OCR_ENABLED = False
+    logger.warning("PaddleOCR not installed. OCR features disabled.")
 
-UMI_OCR_URL = "http://127.0.0.1:1224/api/ocr"
+ocr_engine = None
+
+def get_ocr_engine():
+    global ocr_engine
+    if ocr_engine is None and OCR_ENABLED:
+        logger.info("Initializing PaddleOCR engine (Offline Mode)...")
+        
+        # Determine Model Paths
+        # PyInstaller bundles 'ocr_models' into sys._MEIPASS or current dir
+        base_model_dir = get_resource_path("ocr_models")
+        
+        # Check if we have the models locally (from download_models.py)
+        det_dir = os.path.join(base_model_dir, "ch_PP-OCRv4_det_infer")
+        rec_dir = os.path.join(base_model_dir, "ch_PP-OCRv4_rec_infer")
+        cls_dir = os.path.join(base_model_dir, "ch_ppocr_mobile_v2.0_cls_infer")
+        
+        use_bundled = os.path.exists(det_dir) and os.path.exists(rec_dir) and os.path.exists(cls_dir)
+        
+        # Suppress warnings
+        import logging
+        logging.getLogger('ppocr').setLevel(logging.ERROR)
+        
+        if use_bundled:
+            logger.info(f"Using bundled models at: {base_model_dir}")
+            ocr_engine = PaddleOCR(
+                use_angle_cls=True, 
+                lang="ch",
+                det_model_dir=det_dir,
+                rec_model_dir=rec_dir,
+                cls_model_dir=cls_dir,
+                use_gpu=False,
+                show_log=False # Attempt to suppress log if version allows, else might warn
+            )
+        else:
+            logger.warning("Bundled models not found. Attempting auto-download (Internet required)...")
+            ocr_engine = PaddleOCR(use_angle_cls=True, lang="ch", use_gpu=False)
+            
+    return ocr_engine
 
 @app.post("/api/ocr")
 async def ocr_recognize(file: UploadFile = File(...)):
+    if not OCR_ENABLED:
+        return {"error": "OCR system not available"}
+    
+    temp_img_path = ""
     try:
         contents = await file.read()
-        b64_img = base64.b64encode(contents).decode('utf-8')
         
-        # Umi-OCR API Payload
-        # Supports: {"base64": "...", "options": {"ocr.language": "ch"}}
-        payload = {
-            "base64": b64_img,
-            "options": {
-                "tbpu.parser": "multi_para", # Output format optimization
-                "data.format": "text",       # Return pure text
-            }
-        }
+        # Save temp file
+        temp_img_path = os.path.join(TEMP_DIR, f"ocr_{int(time.time())}_{file.filename}")
+        if not os.path.exists(TEMP_DIR):
+            os.makedirs(TEMP_DIR)
+            
+        with open(temp_img_path, "wb") as f:
+            f.write(contents)
+            
+        engine = get_ocr_engine()
+        if not engine:
+             return {"error": "OCR engine init failed"}
+
+        # Run OCR
+        import warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
+            # paddleocr usually returns [[[[box], [text, score]], ...]]
+            # If nothing found, result might be [None] or None
+            result = engine.ocr(temp_img_path, cls=True)
         
-        try:
-            # Send to Umi-OCR
-            resp = requests.post(UMI_OCR_URL, json=payload, timeout=10)
-            resp.raise_for_status()
-            
-            # Parse Umi-OCR Response
-            # Format: {"code": 100, "data": "Recongized text...", "time": ...}
-            data = resp.json()
-            
-            if data.get("code") == 100 or data.get("code") == 101:
-                return {"text": data.get("data", "")}
-            else:
-                return {"error": f"Umi-OCR Error: {data.get('data')}"}
-                
-        except requests.exceptions.ConnectionError:
-            return {
-                "error": "连接 Umi-OCR 失败。请确保 Umi-OCR 已启动并开启 HTTP 服务 (默认端口 1224)。",
-                "hint": "Start Umi-OCR -> Global Settings -> Advanced -> Allow HTTP Service"
-            }
-            
+        full_text = []
+        if result and len(result) > 0:
+            # result[0] is the result for the first image
+            lines = result[0]
+            if lines: 
+                for line in lines:
+                    # line format: [box, [text, score]]
+                    if len(line) >= 2 and len(line[1]) >= 1:
+                        text = line[1][0]
+                        full_text.append(text)
+        
+        return {"text": "\n".join(full_text)}
+        
     except Exception as e:
-        logger.error(f"OCR Proxy Error: {str(e)}")
+        logger.error(f"OCR Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return {"error": str(e)}
+    finally:
+        if temp_img_path and os.path.exists(temp_img_path):
+            try:
+                os.remove(temp_img_path)
+            except:
+                pass
 
 if __name__ == "__main__":
     import uvicorn
