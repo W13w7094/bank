@@ -637,11 +637,10 @@ def get_ocr_engine():
         if use_bundled:
             logger.info(f"Using bundled models: {base_model_dir}")
             ocr_engine = PaddleOCR(
-                use_angle_cls=False,  # Disabled for smaller size
+                use_angle_cls=False,
                 lang="ch",
                 det_model_dir=det_dir,
-                rec_model_dir=rec_dir,
-                use_gpu=False
+                rec_model_dir=rec_dir
             )
         else:
             logger.warning("Models not found. OCR unavailable in offline mode.")
