@@ -462,6 +462,80 @@ async def get_system_config():
         return config
     except: return default_config
 
+
+# Helper function to generate investigation report context
+def generate_investigation_context(data: ContractRequest):
+    """生成调查报告的context"""
+    # Build main borrower summary
+    if data.main_borrower:
+        mb = data.main_borrower
+        main_summary = f"{mb.name}，{mb.gender}，{mb.age}岁，身份证号：{mb.id_card}，"
+        main_summary += f"联系电话：{mb.mobile}，职业：{mb.occupation or '无'}，"
+        main_summary += f"学历：{mb.education or '无'}，现住址：{mb.address}。"
+        
+        if data.spouse and data.spouse.name:
+            sp = data.spouse
+            main_summary += f" 配偶{sp.name}，{sp.gender}，{sp.age}岁，"
+            main_summary += f"身份证号：{sp.id_card}，联系电话：{sp.mobile}。"
+    else:
+        main_summary = "未填写"
+    
+    # Build joint borrowers summary
+    if data.joint_borrowers:
+        jb_items = []
+        for i, jb in enumerate(data.joint_borrowers, 1):
+            if not jb.name:
+                continue
+            jb_text = f"{i}. {jb.name}，{jb.gender}，{jb.age}岁，身份证号：{jb.id_card}，"
+            jb_text += f"联系电话：{jb.mobile}，职业：{jb.occupation or '无'}，"
+            jb_text += f"与借款人关系：{jb.relation or '无'}，住址：{jb.address}。"
+            jb_items.append(jb_text)
+        joint_summary = "\\n".join(jb_items) if jb_items else "无"
+    else:
+        joint_summary = "无"
+    
+    # Build guarantors summary
+    if data.guarantors:
+        g_items = []
+        for i, g in enumerate(data.guarantors, 1):
+            if not g.name:
+                continue
+            g_text = f"{i}. {g.name}，{g.gender}，{g.age}岁，身份证号：{g.id_card}，"
+            g_text += f"联系电话：{g.mobile}，职业：{g.occupation or '无'}，"
+            g_text += f"与借款人关系：{g.relation or '无'}，住址：{g.address}。"
+            g_items.append(g_text)
+        guarantors_summary = "\\n".join(g_items) if g_items else "无"
+    else:
+        guarantors_summary = "无"
+    
+    # Build collaterals summary
+    if data.collaterals:
+        c_items = []
+        for i, c in enumerate(data.collaterals, 1):
+            if not c.type:
+                continue
+            c_text = f"{i}. {c.type}，坐落于{c.location}，"
+            c_text += f"权证号：{c.cert_no}，建筑面积：{c.area}，"
+            if c.land_area:
+                c_text += f"土地面积：{c.land_area}，"
+            c_text += f"评估价值：{c.value}元（{c.value_cn}）。"
+            c_items.append(c_text)
+        collaterals_summary = "\\n".join(c_items) if c_items else "无"
+    else:
+        collaterals_summary = "无"
+    
+    # Prepare context
+    return {
+        "loan_use": data.loan_use,
+        "loan_amount": data.loan_amount,
+        "loan_amount_cn": num_to_cn(data.loan_amount) if data.loan_amount else "零元整",
+        "loan_term": data.loan_term,
+        "main_borrower_summary": main_summary,
+        "joint_borrowers_summary": joint_summary,
+        "guarantors_summary": guarantors_summary,
+        "collaterals_summary": collaterals_summary,
+    }
+
 @app.post("/api/generate")
 async def generate_contract(data: ContractRequest):
     # 详细记录请求数据，方便排查数据问题
@@ -571,7 +645,14 @@ async def generate_contract(data: ContractRequest):
             save_path = os.path.join(temp_dir, save_name)
 
             try:
-                if tmpl_name.endswith('.docx'):
+                # Special handling for investigation report
+                if tmpl_name == 'investigation_report.docx':
+                    # Generate investigation report context
+                    report_context = generate_investigation_context(data)
+                    doc = DocxTemplate(tmpl_path)
+                    doc.render(report_context)
+                    doc.save(save_path)
+                elif tmpl_name.endswith('.docx'):
                     doc = DocxTemplate(tmpl_path)
                     doc.render(context)
                     doc.save(save_path)
