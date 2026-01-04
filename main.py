@@ -671,10 +671,12 @@ async def generate_contract(data: ContractRequest):
         generated_files.append(report_path)
 
         # 2. 生成合同 (多线程加速)
+        errors = []
         def process_template(tmpl_name):
             if not tmpl_name: return None
             tmpl_path = os.path.join(TEMPLATE_DIR, tmpl_name)
-            if not os.path.exists(tmpl_path): return None
+            if not os.path.exists(tmpl_path):
+                return {"error": f"找不到模板文件: {tmpl_name}"}
 
             base_name, ext = os.path.splitext(tmpl_name)
             save_name = f"{prefix}_{base_name}_{date_str}{ext}"
@@ -694,19 +696,31 @@ async def generate_contract(data: ContractRequest):
                     doc.save(save_path)
                 elif tmpl_name.endswith('.xlsx'):
                     fill_excel_template(tmpl_path, save_path, context)
-                return save_path
+                return {"path": save_path}
             except Exception as e:
-                logger.error(f"❌ 模板处理失败: {tmpl_name}")
-                logger.error(f"错误详情: {traceback.format_exc()}")
-                return None
+                error_detail = f"模板[{tmpl_name}]处理失败: {str(e)}"
+                logger.error(f"❌ {error_detail}")
+                logger.error(traceback.format_exc())
+                return {"error": error_detail}
 
         # 使用线程池并发处理
         with ThreadPoolExecutor(max_workers=4) as executor:
             results = list(executor.map(process_template, data.selected_templates))
         
-        # 收集成功的文件
+        # 收集成功的文件和错误
         for res in results:
-            if res: generated_files.append(res)
+            if not res: continue
+            if "path" in res:
+                generated_files.append(res["path"])
+            elif "error" in res:
+                errors.append(res["error"])
+        
+        # 如果有任何错误，抛出异常给前端显示
+        if errors:
+            raise Exception("\n".join(errors))
+            
+        if not generated_files:
+             raise Exception("未生成任何文件，请检查模版选择")
 
         zip_name = f"{prefix}_业务文件包_{date_str}.zip"
         zip_path = os.path.join(OUTPUT_DIR, zip_name)
