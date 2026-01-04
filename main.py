@@ -598,150 +598,103 @@ async def generate_contract(data: ContractRequest):
         
         return FileResponse(zip_path, filename=zip_name, media_type='application/zip')
 
-    except Exception as e:
-        if e.status_code == 422:
-            logger.error(f"验证错误: {e.detail}")
-        logger.error(f"Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
         if os.path.exists(temp_dir): shutil.rmtree(temp_dir)
 
-# --- OCR Module (EasyOCR - Simple & Reliable) ---
-try:
-    import easyocr
-    OCR_ENABLED = True
-except ImportError:
-    OCR_ENABLED = False
-    logger.warning("EasyOCR not installed. OCR features disabled.")
-
-ocr_engine = None
-
-def get_ocr_engine():
-    """Initialize EasyOCR with local models only"""
-    global ocr_engine
-    if ocr_engine is None and OCR_ENABLED:
-        logger.info("Initializing EasyOCR with local models...")
-        try:
-            # Use local models folder ONLY
-            local_model_dir = os.path.join(CWD, "easyocr_models")
-            
-            if not os.path.exists(local_model_dir):
-                logger.error(f"Local models folder not found: {local_model_dir}")
-                return None
-            
-            logger.info(f"Using models from: {local_model_dir}")
-            
-            # List model files
-            model_files = os.listdir(local_model_dir)
-            logger.info(f"Model files: {model_files}")
-            
-            # Suppress warnings
-            import warnings
-            warnings.filterwarnings('ignore')
-            
-            # Initialize with local models only - NO auto-download
-            ocr_engine = easyocr.Reader(
-                ['ch_sim', 'en'], 
-                gpu=False,
-                model_storage_directory=local_model_dir,
-                download_enabled=False,
-                verbose=False
-            )
-            
-            logger.info("EasyOCR initialized successfully with local models")
-        except Exception as e:
-            logger.error(f"Failed to initialize EasyOCR: {e}")
-            import traceback
-            logger.error(traceback.format_exc())
-            return None
-            
-    return ocr_engine
-
-@app.post("/api/ocr")
-async def ocr_recognize(file: UploadFile = File(...)):
-    """Simple OCR: Image -> Text"""
-    if not OCR_ENABLED:
-        return {"error": "OCR not available"}
-    
-    temp_img_path = ""
+@app.post("/api/generate-investigation-report")
+async def generate_investigation_report(data: ContractRequest):
+    """生成客户调查报告"""
     try:
-        contents = await file.read()
+        # Pre-calculate derived data
+        if data.main_borrower:
+            data.main_borrower.age = calculate_age(data.main_borrower.id_card)
+        if data.spouse:
+            data.spouse.age = calculate_age(data.spouse.id_card)
+        for jb in data.joint_borrowers:
+            jb.age = calculate_age(jb.id_card)
+        for g in data.guarantors:
+            g.age = calculate_age(g.id_card)
+        for c in data.collaterals:
+            c.value_cn = num_to_cn(c.value)
         
-        # Validate and preprocess image using PIL
-        try:
-            from PIL import Image
-            import io
-            
-            # Try to open and validate image
-            img = Image.open(io.BytesIO(contents))
-            
-            # Check image size
-            width, height = img.size
-            if width < 10 or height < 10:
-                return {"error": "Image too small (minimum 10x10 pixels)"}
-            if width > 10000 or height > 10000:
-                return {"error": "Image too large (maximum 10000x10000 pixels)"}
-            
-            # Convert to RGB if needed
-            if img.mode not in ('RGB', 'L'):
-                logger.info(f"Converting image from {img.mode} to RGB")
-                img = img.convert('RGB')
-            
-            # Resize if image is too large (improve OCR speed)
-            max_dimension = 4000
-            if width > max_dimension or height > max_dimension:
-                ratio = min(max_dimension / width, max_dimension / height)
-                new_size = (int(width * ratio), int(height * ratio))
-                logger.info(f"Resizing image from {img.size} to {new_size}")
-                img = img.resize(new_size, Image.Resampling.LANCZOS)
-            
-            # Save as temporary file
-            temp_img_path = os.path.join(TEMP_DIR, f"ocr_{int(time.time())}.png")
-            os.makedirs(TEMP_DIR, exist_ok=True)
-            img.save(temp_img_path, 'PNG')
-            
-            logger.info(f"Image preprocessed: {width}x{height} -> {temp_img_path}")
-            
-        except Exception as img_error:
-            logger.error(f"Image validation failed: {img_error}")
-            return {"error": f"Invalid image: {str(img_error)}"}
+        # Determine marital status
+        main_marital_status = "已婚" if data.spouse and data.spouse.name else "未婚"
         
-        engine = get_ocr_engine()
-        if not engine:
-            return {"error": "OCR engine not initialized"}
-
-        # Run OCR with error handling
-        try:
-            result = engine.readtext(temp_img_path)
-        except Exception as ocr_error:
-            logger.error(f"EasyOCR processing failed: {ocr_error}")
-            return {"error": f"OCR processing failed: {str(ocr_error)}"}
+        # Prepare report context
+        context = {
+            "report_no": f"DC{int(time.time())}",
+            "investigation_date": datetime.now().strftime("%Y年%m月%d日"),
+            "main_borrower": data.main_borrower.dict() if data.main_borrower else {},
+            "main_marital_status": main_marital_status,
+            "spouse": data.spouse.dict() if data.spouse else {"name": "无", "id_card": "", "phone": "", "occupation": ""},
+            "loan_amount": data.loan_amount,
+            "loan_amount_cn": num_to_cn(data.loan_amount),
+            "loan_term": data.loan_term,
+            "annual_rate": data.annual_rate,
+            "loan_use": data.loan_use,
+        }
         
-        # Extract text, filter low confidence
-        full_text = []
-        for item in result:
-            if len(item) >= 3:
-                text = item[1]
-                confidence = item[2]
-                if confidence > 0.1 and text.strip():
-                    full_text.append(text)
+        # Format collaterals
+        if data.collaterals:
+            collaterals_list = []
+            for i, c in enumerate(data.collaterals, 1):
+                collaterals_list.append(
+                    f"{i}. {c.type} - {c.location}\n"
+                    f"   权证号：{c.cert_no}\n"
+                    f"   评估价值：{c.value}元（{c.value_cn}）\n"
+                    f"   建筑面积：{c.area}㎡，土地面积：{c.land_area}㎡"
+                )
+            context["collaterals_info"] = "\n".join(collaterals_list)
+            context["guarantee_summary"] = f"抵押物{len(data.collaterals)}处"
+        else:
+            context["collaterals_info"] = "无"
+            context["guarantee_summary"] = "无抵押物"
         
-        if not full_text:
-            return {"text": "", "message": "No text detected in image"}
+        # Format guarantors
+        if data.guarantors:
+            guarantors_list = []
+            for i, g in enumerate(data.guarantors, 1):
+                guarantors_list.append(
+                    f"{i}. {g.name}，{g.age}岁，{g.gender}，{g.id_card}\n"
+                    f"   联系电话：{g.phone}，职业：{g.occupation}"
+                )
+            context["guarantors_info"] = "\n".join(guarantors_list)
+            context["guarantee_summary"] += f"，担保人{len(data.guarantors)}人"
+        else:
+            context["guarantors_info"] = "无"
         
-        return {"text": "\n".join(full_text)}
+        # Recommendation
+        if data.collaterals or data.guarantors:
+            context["recommendation"] = "予以审批"
+        else:
+            context["recommendation"] = "谨慎审批，需补充担保措施"
         
+        # Load template
+        template_path = os.path.join(TEMPLATE_DIR, "investigation_report.docx")
+        if not os.path.exists(template_path):
+            raise HTTPException(status_code=404, detail="报告模板不存在")
+        
+        doc = DocxTemplate(template_path)
+        doc.render(context)
+        
+        # Save to temp file
+        filename = f"调查报告_{data.main_borrower.name if data.main_borrower else data.loan_amount}_{datetime.now().strftime('%Y%m%d%H%M%S')}.docx"
+        temp_file = os.path.join(TEMP_DIR, filename)
+        os.makedirs(TEMP_DIR, exist_ok=True)
+        doc.save(temp_file)
+        
+        logger.info(f"生成调查报告: {filename}")
+        
+        return FileResponse(
+            path=temp_file,
+            filename=filename,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+    
     except Exception as e:
-        logger.error(f"OCR Error: {str(e)}")
+        logger.error(f"生成调查报告错误: {e}")
         import traceback
         logger.error(traceback.format_exc())
-        return {"error": f"Server error: {str(e)}"}
-    finally:
-        if temp_img_path and os.path.exists(temp_img_path):
-            try:
-                os.remove(temp_img_path)
-            except:
-                pass
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

@@ -28,9 +28,6 @@ args = [
     # Frontend (from frontend/dist to static in exe)
     f'--add-data=frontend/dist{sep}static',
     
-    # EasyOCR models (bundled into exe)
-    f'--add-data=easyocr_models{sep}easyocr_models',
-    
     # Hidden imports
     '--hidden-import=uvicorn.logging',
     '--hidden-import=uvicorn.loops',

@@ -278,3 +278,56 @@
 2025-12-31 15:35:37,981 - uvicorn.access - INFO - 127.0.0.1:52824 - "POST /api/ocr HTTP/1.1" 200
 2025-12-31 15:52:08,519 - uvicorn.access - INFO - 127.0.0.1:54095 - "POST /api/ocr HTTP/1.1" 200
 2025-12-31 15:54:34,113 - uvicorn.access - INFO - 127.0.0.1:54254 - "POST /api/ocr HTTP/1.1" 200
+2025-12-31 17:21:52,270 - BankContract - INFO - 使用外部模板目录: /Users/w13w/Downloads/backend_pkg/templates
+2025-12-31 17:21:52,270 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/data.json
+2025-12-31 17:21:52,270 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/branches.json
+2025-12-31 17:21:53,690 - BankContract - INFO - 服务启动成功，请访问 http://localhost:8000
+2025-12-31 17:21:53,699 - uvicorn.error - INFO - Started server process [83118]
+2025-12-31 17:21:53,699 - uvicorn.error - INFO - Waiting for application startup.
+2025-12-31 17:21:53,699 - uvicorn.error - INFO - Application startup complete.
+2025-12-31 17:21:53,699 - uvicorn.error - ERROR - [Errno 48] error while attempting to bind on address ('0.0.0.0', 8000): address already in use
+2025-12-31 17:21:53,700 - uvicorn.error - INFO - Waiting for application shutdown.
+2025-12-31 17:21:53,700 - uvicorn.error - INFO - Application shutdown complete.
+2025-12-31 17:22:24,105 - BankContract - INFO - 使用外部模板目录: /Users/w13w/Downloads/backend_pkg/templates
+2025-12-31 17:22:24,105 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/data.json
+2025-12-31 17:22:24,105 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/branches.json
+2025-12-31 17:22:25,485 - BankContract - INFO - 服务启动成功，请访问 http://localhost:8000
+2025-12-31 17:22:25,501 - uvicorn.error - INFO - Started server process [83308]
+2025-12-31 17:22:25,501 - uvicorn.error - INFO - Waiting for application startup.
+2025-12-31 17:22:25,502 - uvicorn.error - INFO - Application startup complete.
+2025-12-31 17:22:25,503 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2025-12-31 17:22:30,324 - uvicorn.access - INFO - 127.0.0.1:60187 - "GET /api/branches HTTP/1.1" 200
+2025-12-31 17:22:30,327 - uvicorn.access - INFO - 127.0.0.1:60188 - "GET /api/config HTTP/1.1" 200
+2025-12-31 17:22:30,328 - uvicorn.access - INFO - 127.0.0.1:60187 - "GET /api/branches HTTP/1.1" 200
+2025-12-31 17:22:30,329 - uvicorn.access - INFO - 127.0.0.1:60188 - "GET /api/config HTTP/1.1" 200
+2025-12-31 17:22:36,329 - BankContract - INFO - Converting image from RGBA to RGB
+2025-12-31 17:22:36,358 - BankContract - INFO - Image preprocessed: 425x605 -> /Users/w13w/Downloads/backend_pkg/temp/ocr_1767172956.png
+2025-12-31 17:22:36,358 - BankContract - INFO - Initializing EasyOCR (Chinese + English)...
+2025-12-31 17:22:36,358 - BankContract - INFO - Models not found, will auto-download (requires internet)...
+2025-12-31 17:22:36,358 - easyocr.easyocr - WARNING - Using CPU. Note: This module is much faster with a GPU.
+2025-12-31 17:22:38,297 - BankContract - INFO - EasyOCR initialized successfully
+2025-12-31 17:22:38,877 - uvicorn.access - INFO - 127.0.0.1:60192 - "POST /api/ocr HTTP/1.1" 200
+2025-12-31 17:26:25,241 - uvicorn.access - INFO - 127.0.0.1:60465 - "GET /api/branches HTTP/1.1" 200
+2025-12-31 17:26:25,243 - uvicorn.access - INFO - 127.0.0.1:60466 - "GET /api/config HTTP/1.1" 200
+2025-12-31 17:26:25,244 - uvicorn.access - INFO - 127.0.0.1:60465 - "GET /api/branches HTTP/1.1" 200
+2025-12-31 17:26:25,245 - uvicorn.access - INFO - 127.0.0.1:60466 - "GET /api/config HTTP/1.1" 200
+2025-12-31 17:26:31,670 - BankContract - INFO - Converting image from RGBA to RGB
+2025-12-31 17:26:31,701 - BankContract - INFO - Image preprocessed: 425x605 -> /Users/w13w/Downloads/backend_pkg/temp/ocr_1767173191.png
+2025-12-31 17:26:32,267 - uvicorn.access - INFO - 127.0.0.1:60472 - "POST /api/ocr HTTP/1.1" 200
+2025-12-31 17:26:48,594 - BankContract - INFO - Converting image from RGBA to RGB
+2025-12-31 17:26:48,702 - BankContract - INFO - Image preprocessed: 1170x2532 -> /Users/w13w/Downloads/backend_pkg/temp/ocr_1767173208.png
+2025-12-31 17:26:56,197 - uvicorn.access - INFO - 127.0.0.1:60486 - "POST /api/ocr HTTP/1.1" 200
+2025-12-31 17:27:12,769 - BankContract - INFO - 使用外部模板目录: /Users/w13w/Downloads/backend_pkg/templates
+2025-12-31 17:27:12,770 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/data.json
+2025-12-31 17:27:12,770 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/branches.json
+2025-12-31 17:27:14,448 - BankContract - INFO - 服务启动成功，请访问 http://localhost:8000
+2025-12-31 17:27:14,458 - uvicorn.error - INFO - Started server process [84051]
+2025-12-31 17:27:14,458 - uvicorn.error - INFO - Waiting for application startup.
+2025-12-31 17:27:14,460 - uvicorn.error - INFO - Application startup complete.
+2025-12-31 17:27:14,460 - uvicorn.error - ERROR - [Errno 48] error while attempting to bind on address ('0.0.0.0', 8000): address already in use
+2025-12-31 17:27:14,461 - uvicorn.error - INFO - Waiting for application shutdown.
+2025-12-31 17:27:14,461 - uvicorn.error - INFO - Application shutdown complete.
+2025-12-31 17:29:30,214 - BankContract - INFO - Image preprocessed: 1170x2532 -> /Users/w13w/Downloads/backend_pkg/temp/ocr_1767173370.png
+2025-12-31 17:29:37,180 - uvicorn.access - INFO - 127.0.0.1:60659 - "POST /api/ocr HTTP/1.1" 200
+2025-12-31 17:33:13,484 - BankContract - INFO - Image preprocessed: 891x634 -> /Users/w13w/Downloads/backend_pkg/temp/ocr_1767173593.png
+2025-12-31 17:33:16,342 - uvicorn.access - INFO - 127.0.0.1:60888 - "POST /api/ocr HTTP/1.1" 200
