@@ -389,8 +389,8 @@ function App() {
     if (syncSpouse && hasSpouse && spouseData) { // Changed `spouse` to `spouseData`
       if (!currentJointBorrowers) currentJointBorrowers = [];
 
-      // Check if spouse already in list (by ID card)
-      const spouseIndex = currentJointBorrowers.findIndex((jb: any) => jb.id_card === spouseData.id_card); // Changed `spouse` to `spouseData`
+      // 查找已存在的自动同步配偶（优先用 is_spouse_auto 标记查找）
+      const spouseIndex = currentJointBorrowers.findIndex((jb: any) => jb.is_spouse_auto === true);
 
       // Get current spouse info from form to ensure latest calculated fields are used
       const currentSpouseFormValues = form.getFieldValue('spouse') || {};
