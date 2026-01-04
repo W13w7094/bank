@@ -317,7 +317,7 @@ function App() {
       if (info) {
         form.setFieldValue([...prefixPath, 'gender'], info.gender);
         form.setFieldValue([...prefixPath, 'birthday'], info.birthday);
-        form.setFieldValue([...prefixPath, 'age'], info.age);
+        form.setFieldValue([...prefixPath, 'age'], String(info.age));  // 转换为字符串
       }
     };
 
@@ -470,7 +470,7 @@ function App() {
       // 详细的错误处理 - 处理Blob响应
       if (error.response) {
         const status = error.response.status;
-        
+
         if (status === 422) {
           // 数据验证错误 - Blob需要转换为JSON
           if (error.response.data instanceof Blob) {
@@ -478,7 +478,7 @@ function App() {
               try {
                 const jsonData = JSON.parse(text);
                 console.log('解析后的422错误:', jsonData);
-                
+
                 if (jsonData.detail && Array.isArray(jsonData.detail)) {
                   let msg = '数据验证失败：\n';
                   jsonData.detail.forEach((err: any) => {
