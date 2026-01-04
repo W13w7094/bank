@@ -126,5 +126,10 @@
             "need_guarantee": false,
             "value": "approval_sheet"
         }
-    ]
+    ],
+    "business_rules": {
+        "max_age_limit_total": 70,
+        "min_age": 18,
+        "max_age": 65
+    }
 }
