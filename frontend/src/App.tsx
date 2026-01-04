@@ -13,15 +13,13 @@ import {
   SolutionOutlined, IdcardOutlined,
   ShopOutlined, AppstoreOutlined,
   DownOutlined, HomeOutlined, GoldOutlined, ImportOutlined,
-  ReloadOutlined, ScanOutlined, CopyOutlined, InboxOutlined
+  ReloadOutlined
 } from '@ant-design/icons';
 
 
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
-const { Dragger } = Upload; // Keep one
-const { TextArea } = Input;
 
 // --- 配置 ---
 const BASE_URL = "http://localhost:8000";
