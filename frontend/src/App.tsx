@@ -384,28 +384,32 @@ function App() {
   const updateSpouseInJointList = (spouseData: any, mainAddr: string) => {
     if (!spouseData || !spouseData.name) return;
 
-    const jointList = form.getFieldValue('joint_borrowers') || [];
-    const spouseIndex = jointList.findIndex((item: any) => item.is_spouse_auto === true);
+    let currentJointBorrowers = form.getFieldValue('joint_borrowers') || [];
 
-    // 关键：手动再算一次，防止 spouseData 里的性别还没更新
-    const extraInfo = parseIdCard(spouseData.id_card) || {};
+    if (syncSpouse && hasSpouse && spouseData) { // Changed `spouse` to `spouseData`
+      if (!currentJointBorrowers) currentJointBorrowers = [];
 
-    const newSpouseItem = {
-      ...spouseData,
-      ...spouseData,
-      ...extraInfo, // 覆盖性别/生日/年龄
-      relation: '夫妻',
-      is_spouse_auto: true,
-      address: spouseData.address || mainAddr
-    };
+      // Check if spouse already in list (by ID card)
+      const spouseIndex = currentJointBorrowers.findIndex((jb: any) => jb.id_card === spouseData.id_card); // Changed `spouse` to `spouseData`
 
-    const newList = [...jointList];
-    if (spouseIndex > -1) {
-      newList[spouseIndex] = newSpouseItem;
-    } else {
-      newList.unshift(newSpouseItem);
+      const spouseAsBorrower = {
+        ...spouseData, // Changed `spouse` to `spouseData`
+        relation: '夫妻',
+        is_spouse_auto: true,
+        age: String(spouseData.age || ''), // Ensure age is string, changed `spouse` to `spouseData`
+        address: spouseData.address || mainAddr // Added address from spouseData or mainAddr
+      };
+
+      if (spouseIndex > -1) {
+        // Update existing
+        const newJointBorrowers = [...currentJointBorrowers];
+        newJointBorrowers[spouseIndex] = { ...newJointBorrowers[spouseIndex], ...spouseAsBorrower };
+        form.setFieldsValue({ joint_borrowers: newJointBorrowers });
+      } else {
+        // Add to beginning
+        form.setFieldsValue({ joint_borrowers: [spouseAsBorrower, ...currentJointBorrowers] });
+      }
     }
-    form.setFieldValue('joint_borrowers', newList);
   };
 
   const removeSpouseFromJointList = () => {
