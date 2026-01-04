@@ -842,4 +842,23 @@ if __name__ == "__main__":
     # log_config=None 禁止 Uvicorn 配置自己的日志（它会尝试访问 stdout 导致 noconsole 模式崩溃）
     # 我们上面已经配置了 logging.basicConfig
     print(">>> Starting Uvicorn server...")
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_config=None)
+    # 检查是否是打包后的环境
+    is_packaged = getattr(sys, "frozen", False)
+    
+    if is_packaged:
+        # 生产环境：不使用reload
+    # 检查是否是打包后的环境
+    is_packaged = getattr(sys, 'frozen', False)
+    
+    if is_packaged:
+        # 生产环境：不使用reload
+        uvicorn.run(app, host="0.0.0.0", port=8000, log_config=None)
+    else:
+        # 开发环境：启用热重载 - 自动检测代码变化并重启
+        logger.info("🔥 开发模式：已启用热重载")
+        uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, log_config=None)
+
+    else:
+        # 开发环境：启用热重载 - 自动检测代码变化并重启
+        logger.info("开发模式：已启用热重载")
+        uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, log_config=None)
