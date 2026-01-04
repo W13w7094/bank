@@ -607,79 +607,100 @@ async def generate_contract(data: ContractRequest):
         if os.path.exists(temp_dir): shutil.rmtree(temp_dir)
 
 @app.post("/api/generate-investigation-report")
-async def generate_investigation_report(data: ContractRequest):
-    """生成客户调查报告（简洁版）"""
+async def generate_investigation_report(data: dict):
+    """生成客户调查报告（简洁版）- 接受部分数据"""
     try:
-        # Pre-calculate derived data
-        if data.main_borrower:
-            data.main_borrower.age = calculate_age(data.main_borrower.id_card)
-        if data.spouse:
-            data.spouse.age = calculate_age(data.spouse.id_card)
-        for jb in data.joint_borrowers:
-            jb.age = calculate_age(jb.id_card)
-        for g in data.guarantors:
-            g.age = calculate_age(g.id_card)
-        for c in data.collaterals:
-            c.value_cn = num_to_cn(c.value)
+        # Extract main data with safe defaults
+        loan_use = data.get('loan_use', '未填写')
+        loan_amount = data.get('loan_amount', 0)
+        loan_term = data.get('loan_term', 0)
+        
+        main_borrower = data.get('main_borrower')
+        spouse = data.get('spouse')
+        joint_borrowers = data.get('joint_borrowers', [])
+        guarantors = data.get('guarantors', [])
+        collaterals = data.get('collaterals', [])
         
         # Build main borrower summary
-        if data.main_borrower:
-            mb = data.main_borrower
-            main_summary = f"{mb.name}，{mb.gender}，{mb.age}岁，身份证号：{mb.id_card}，"
-            main_summary += f"联系电话：{mb.mobile}，职业：{mb.occupation or '无'}，"
-            main_summary += f"学历：{mb.education or '无'}，现住址：{mb.address}。"
+        if main_borrower and main_borrower.get('name'):
+            mb = main_borrower
+            age = calculate_age(mb.get('id_card', '')) if mb.get('id_card') else '未知'
+            main_summary = f"{mb.get('name', '未知')}，{mb.get('gender', '未知')}，{age}岁，"
+            main_summary += f"身份证号：{mb.get('id_card', '未填写')}，"
+            main_summary += f"联系电话：{mb.get('mobile', '未填写')}，"
+            main_summary += f"职业：{mb.get('occupation', '未填写')}，"
+            main_summary += f"学历：{mb.get('education', '未填写')}，"
+            main_summary += f"现住址：{mb.get('address', '未填写')}。"
             
-            if data.spouse and data.spouse.name:
-                sp = data.spouse
-                main_summary += f" 配偶{sp.name}，{sp.gender}，{sp.age}岁，"
-                main_summary += f"身份证号：{sp.id_card}，联系电话：{sp.mobile}。"
+            if spouse and spouse.get('name'):
+                sp = spouse
+                sp_age = calculate_age(sp.get('id_card', '')) if sp.get('id_card') else '未知'
+                main_summary += f" 配偶{sp.get('name', '未知')}，{sp.get('gender', '未知')}，{sp_age}岁，"
+                main_summary += f"身份证号：{sp.get('id_card', '未填写')}，"
+                main_summary += f"联系电话：{sp.get('mobile', '未填写')}。"
         else:
-            main_summary = "无"
+            main_summary = "未填写"
         
         # Build joint borrowers summary
-        if data.joint_borrowers:
+        if joint_borrowers:
             jb_items = []
-            for i, jb in enumerate(data.joint_borrowers, 1):
-                jb_text = f"{i}. {jb.name}，{jb.gender}，{jb.age}岁，身份证号：{jb.id_card}，"
-                jb_text += f"联系电话：{jb.mobile}，职业：{jb.occupation or '无'}，"
-                jb_text += f"与借款人关系：{jb.relation or '无'}，住址：{jb.address}。"
+            for i, jb in enumerate(joint_borrowers, 1):
+                if not jb.get('name'):
+                    continue
+                jb_age = calculate_age(jb.get('id_card', '')) if jb.get('id_card') else '未知'
+                jb_text = f"{i}. {jb.get('name', '未知')}，{jb.get('gender', '未知')}，{jb_age}岁，"
+                jb_text += f"身份证号：{jb.get('id_card', '未填写')}，"
+                jb_text += f"联系电话：{jb.get('mobile', '未填写')}，"
+                jb_text += f"职业：{jb.get('occupation', '未填写')}，"
+                jb_text += f"与借款人关系：{jb.get('relation', '未填写')}，"
+                jb_text += f"住址：{jb.get('address', '未填写')}。"
                 jb_items.append(jb_text)
-            joint_summary = "\n".join(jb_items)
+            joint_summary = "\\n".join(jb_items) if jb_items else "无"
         else:
             joint_summary = "无"
         
         # Build guarantors summary
-        if data.guarantors:
+        if guarantors:
             g_items = []
-            for i, g in enumerate(data.guarantors, 1):
-                g_text = f"{i}. {g.name}，{g.gender}，{g.age}岁，身份证号：{g.id_card}，"
-                g_text += f"联系电话：{g.mobile}，职业：{g.occupation or '无'}，"
-                g_text += f"与借款人关系：{g.relation or '无'}，住址：{g.address}。"
+            for i, g in enumerate(guarantors, 1):
+                if not g.get('name'):
+                    continue
+                g_age = calculate_age(g.get('id_card', '')) if g.get('id_card') else '未知'
+                g_text = f"{i}. {g.get('name', '未知')}，{g.get('gender', '未知')}，{g_age}岁，"
+                g_text += f"身份证号：{g.get('id_card', '未填写')}，"
+                g_text += f"联系电话：{g.get('mobile', '未填写')}，"
+                g_text += f"职业：{g.get('occupation', '未填写')}，"
+                g_text += f"与借款人关系：{g.get('relation', '未填写')}，"
+                g_text += f"住址：{g.get('address', '未填写')}。"
                 g_items.append(g_text)
-            guarantors_summary = "\n".join(g_items)
+            guarantors_summary = "\\n".join(g_items) if g_items else "无"
         else:
             guarantors_summary = "无"
         
         # Build collaterals summary
-        if data.collaterals:
+        if collaterals:
             c_items = []
-            for i, c in enumerate(data.collaterals, 1):
-                c_text = f"{i}. {c.type}，坐落于{c.location}，"
-                c_text += f"权证号：{c.cert_no}，建筑面积：{c.area}，"
-                if c.land_area:
-                    c_text += f"土地面积：{c.land_area}，"
-                c_text += f"评估价值：{c.value}元（{c.value_cn}）。"
+            for i, c in enumerate(collaterals, 1):
+                if not c.get('type'):
+                    continue
+                c_text = f"{i}. {c.get('type', '未知')}，坐落于{c.get('location', '未填写')}，"
+                c_text += f"权证号：{c.get('cert_no', '未填写')}，"
+                c_text += f"建筑面积：{c.get('area', '未填写')}，"
+                if c.get('land_area'):
+                    c_text += f"土地面积：{c.get('land_area')}，"
+                c_value = c.get('value', 0)
+                c_text += f"评估价值：{c_value}元（{num_to_cn(c_value) if c_value else '未填写'}）。"
                 c_items.append(c_text)
-            collaterals_summary = "\n".join(c_items)
+            collaterals_summary = "\\n".join(c_items) if c_items else "无"
         else:
             collaterals_summary = "无"
         
         # Prepare context
         context = {
-            "loan_use": data.loan_use,
-            "loan_amount": data.loan_amount,
-            "loan_amount_cn": num_to_cn(data.loan_amount),
-            "loan_term": data.loan_term,
+            "loan_use": loan_use,
+            "loan_amount": loan_amount,
+            "loan_amount_cn": num_to_cn(loan_amount) if loan_amount else "零元整",
+            "loan_term": loan_term,
             "main_borrower_summary": main_summary,
             "joint_borrowers_summary": joint_summary,
             "guarantors_summary": guarantors_summary,
@@ -695,7 +716,8 @@ async def generate_investigation_report(data: ContractRequest):
         doc.render(context)
         
         # Save to temp file
-        filename = f"调查报告_{data.main_borrower.name if data.main_borrower else data.loan_amount}_{datetime.now().strftime('%Y%m%d%H%M%S')}.docx"
+        borrower_name = main_borrower.get('name') if main_borrower else str(loan_amount)
+        filename = f"调查报告_{borrower_name}_{datetime.now().strftime('%Y%m%d%H%M%S')}.docx"
         temp_file = os.path.join(TEMP_DIR, filename)
         os.makedirs(TEMP_DIR, exist_ok=True)
         doc.save(temp_file)
