@@ -263,7 +263,15 @@ function App() {
           setBranchOptions(branchRes.data.map((b: any) => ({ label: `${b.name} (${b.short_name || '无简称'})`, value: b.name })));
         }
         if (configRes.data) {
-          setSystemOptions(configRes.data.options || {});
+          const opts = configRes.data.options || {};
+          // Ant Design Select/AutoComplete options need to be objects { value: string }
+          setSystemOptions({
+            education: (opts.education || []).map((v: string) => ({ value: v })),
+            ethnicity: (opts.ethnicity || []).map((v: string) => ({ value: v })),
+            occupation: (opts.occupation || []).map((v: string) => ({ value: v })),
+            loan_use: (opts.loan_use || []).map((v: string) => ({ value: v })),
+            collateral_type: (opts.collateral_type || []).map((v: string) => ({ value: v })),
+          });
           setAllTemplates(configRes.data.templates || []);
           setBusinessRules(configRes.data.business_rules || {});
         }
