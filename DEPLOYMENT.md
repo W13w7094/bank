@@ -1,125 +1,69 @@
 # 银行合同生成系统部署文档
 
 ## 1. 系统概述
-本系统用于自动生成银行贷款合同、担保合同及抵押合同。后端采用 Python FastAPI，前端采用 React。
+本系统用于自动生成银行贷款合同、担保合同及抵押合同。后端采用 Python FastAPI，前端采用 React。支持 Windows 单文件部署 (.exe)。
 
 ## 2. 目录结构
 ```
 bank-contract-system/
-├── backend/
-│   ├── main.py             # 主程序（FastAPI 后端）
-│   ├── app.log             # 运行日志（自动生成）
-│   ├── data.json           # 基础配置数据（下拉选项等）
-│   ├── branches.json       # 支行信息数据（包含简称）
-│   ├── templates/          # Word 模板存放目录 (.docx)
-│   ├── output/             # 生成文件临时目录
-│   └── frontend/           # 前端 React 项目代码
+├── bank_contract_app.exe   # 主程序 (Windows)
+├── app.log                 # 运行日志（自动生成）
+├── data.json               # 基础配置数据（下拉选项、模板配置）
+├── branches.json           # 支行信息数据（包含简称）
+├── templates/              # 模板存放目录 (.docx / .xlsx)
+├── output/                 # 生成文件临时目录
 └── DEPLOYMENT.md           # 本文档
 ```
 
-## 3. 模板变量字典 (详细版)
+## 3. 模板变量字典
 
-所有的 Word 模板 (`.docx`) 必须存放在 `backend/templates/` 目录下。请在 Word 中使用 `{{ 变量名 }}` 格式。
+### 3.1 Word 模板 (.docx)
+使用 `{{ 变量名 }}` 格式。
+- **基础字段**：`{{ loan_amount }}` (小写), `{{ loan_amount_cn }}` (大写), `{{ loan_term }}`, `{{ loan_use }}`, `{{ start_date_cn }}`, `{{ end_date_cn }}`
+- **办理支行**：`{{ branch.name }}` (全称), `{{ branch.short_name }}` (简称), `{{ branch.manager }}`, `{{ branch.phone }}`, `{{ branch.address }}`
+- **主借款人**：`{{ main_name }}`, `{{ main_card }}`, `{{ main_addr }}`, `{{ main_borrower.gender }}`, `{{ main_borrower.age }}`, `{{ main_borrower.mobile }}`
+- **配偶**：`{{ spouse.name }}`, `{{ spouse.id_card }}`, `{{ spouse.mobile }}`, `{{ spouse.age }}`
+- **共同借款人** (1-3)：`{{ joint_borrower1.name }}`, `{{ joint_borrower1.id_card }}`, `{{ joint_borrower1.age }}` 等
+- **担保人** (1-7)：`{{ guarantor1.name }}`, `{{ guarantor1.id_card }}`, `{{ guarantor1.age }}` 等
+- **抵押物** (1-5)：`{{ collateral1.owner }}`, `{{ collateral1.location }}`, `{{ collateral1.value }}`, `{{ collateral1.value_cn }}` (大写), `{{ collateral1.cert_no }}`
 
-### 3.1 贷款业务信息
-| 变量名 | 说明 | 示例 |
+### 3.2 Excel 模板 (.xlsx) **(v2.0 新增)**
+Excel 模板现在支持更灵活的变量替换，支持嵌套对象格式。
+- **支持所有 Word 变量**：你可以直接在单元格里写 `{{ spouse.name }}` 或 `{{ main_borrower.id_card }}`。
+- **注意**：
+  - 如果只要显示变量值，推荐只写变量，例如 `{{ loan_amount }}`。
+  - 支持部分替换，例如单元格内容为 `贷款金额：{{ loan_amount }}元`，生成后会变成 `贷款金额：500000元`。
+
+### 3.3 客户调查报告 **(v2.0 新增)**
+调查报告（`investigation_report.docx`）拥有专用的汇总字段，用于生成叙述性的段落。
+
+| 变量名 | 说明 | 示例内容 |
 | :--- | :--- | :--- |
-| `{{ loan_amount }}` | 贷款金额（小写） | 500000 |
-| `{{ loan_amount_cn }}` | 贷款金额（大写） | 伍拾万元整 |
-| `{{ loan_term }}` | 贷款期限（月） | 36 |
-| `{{ loan_use }}` | 贷款用途 | 经营周转 |
-| `{{ start_date_cn }}` | 起始日期（中文） | 2024年01月01日 |
-| `{{ end_date_cn }}` | 到期日期（中文） | 2027年01月01日 |
-| `{{ start_date }}` | 起始日期（短横线） | 2024-01-01 |
-| `{{ end_date }}` | 到期日期（短横线） | 2027-01-01 |
+| `{{ main_summary }}` | 主借款人及配偶综合情况 | "张三，男，35岁，身份证... 配偶李四..." |
+| `{{ joint_summary }}` | 共同借款人列表 | "1. 王五，男，30岁... \n 2. 赵六..." |
+| `{{ guarantor_summary }}` | 担保人列表 | "1. 陈七，女，40岁..." |
+| `{{ collateral_summary }}` | 抵押物列表 | "1. 住宅，坐落于... 评估价值：100万元..." |
 
-### 3.2 办理网点信息
-| 变量名 | 说明 |
-| :--- | :--- |
-| `{{ branch.name }}` | 支行全称 |
-| `{{ branch.short_name }}` | 支行简称 (**新增**) |
-| `{{ branch.manager }}` | 负责人 |
-| `{{ branch.phone }}` | 联系电话 |
-| `{{ branch.address }}` | 地址 |
+## 4. 运行与配置
 
-### 3.3 主借款人信息
-可以使用快捷变量或完整对象访问。**新增自动计算的年龄字段。**
-| 快捷变量 | 完整变量 | 说明 |
-| :--- | :--- | :--- |
-| `{{ main_name }}` | `{{ main_borrower.name }}` | 姓名 |
-| `{{ main_card }}` | `{{ main_borrower.id_card }}` | 身份证号 |
-| `{{ main_addr }}` | `{{ main_borrower.address }}` | 住址 |
-| - | `{{ main_borrower.mobile }}` | 手机号 |
-| - | `{{ main_borrower.gender }}` | 性别 |
-| - | `{{ main_borrower.birthday }}` | 生日 (YYYY-MM-DD) |
-| - | `{{ main_borrower.age }}` | 年龄 (**新增**) |
-| - | `{{ main_borrower.ethnicity }}` | 民族 |
-| - | `{{ main_borrower.education }}` | 学历 |
-| - | `{{ main_borrower.occupation }}` | 职业 |
+### 4.1 端口与启动
+- **动态端口**：程序启动时默认尝试使用 **8090** 端口。如果被占用，会自动尝试 8091, 8092 等，直到找到可用端口。
+- **自动打开浏览器**：Windows 版启动成功后，会自动调用默认浏览器打开系统页面。
+- **手动访问**：如果自动打开失败，请查看同目录下的 `app.log`，找到 `Server started at http://localhost:xxxx` 字样，手动在浏览器输入该地址。
 
-### 3.4 配偶信息 (如果有)
-| 变量名 | 说明 |
-| :--- | :--- |
-| `{{ spouse.name }}` | 配偶姓名 |
-| `{{ spouse.id_card }}` | 身份证号 |
-| `{{ spouse.mobile }}` | 手机号 |
-| `{{ spouse.relation }}` | 关系 |
-| `{{ spouse.age }}` | 年龄 (**新增**) |
+### 4.2 配置文件
+- **branches.json**：配置支行列表。
+- **data.json**：
+  - `templates`: 配置在下拉框中显示的模板文件。
+  - `options`: 配置“职业”、“借款用途”等下拉选项。
 
-### 3.5 共同借款人 (支持3个)
-使用 `joint_borrower1` 到 `joint_borrower3`。
-| 变量名 (以第1个为例) | 说明 |
-| :--- | :--- |
-| `{{ joint_borrower1.name }}` | 姓名 |
-| `{{ joint_borrower1.id_card }}` | 身份证号 |
-| `{{ joint_borrower1.mobile }}` | 手机号 |
-| `{{ joint_borrower1.address }}` | 住址 |
-| `{{ joint_borrower1.relation }}` | 与主借款人关系 |
-| `{{ joint_borrower1.age }}` | 年龄 (**新增**) |
-| `{{ joint_borrower1.gender }}` | 性别 |
-| `{{ joint_borrower1.ethnicity }}` | 民族 |
+### 4.3 常见问题
+- **Q: 模板生成报错？**
+  - **A**: 系统现在会返回具体的错误原因。常见原因包括：Word文档格式损坏（尝试另存为新文件）、变量名拼写错误（如 `{{ spose.name }}`）、或使用了不支持的语法。
+- **Q: 调查报告没内容？**
+  - **A**: 请确保使用了 `{{ main_summary }}` 等专用汇总变量，而不是手动罗列 `{{ main_name }}`。
 
-### 3.6 担保人 (支持7个)
-使用 `guarantor1` 到 `guarantor7`。
-| 变量名 (以第1个为例) | 说明 |
-| :--- | :--- |
-| `{{ guarantor1.name }}` | 姓名 |
-| `{{ guarantor1.id_card }}` | 身份证号 |
-| `{{ guarantor1.mobile }}` | 手机号 |
-| `{{ guarantor1.address }}` | 住址 |
-| `{{ guarantor1.relation }}` | 与借款人关系 |
-| `{{ guarantor1.age }}` | 年龄 (**新增**) |
-| `{{ guarantor1.gender }}` | 性别 |
-| `{{ guarantor1.ethnicity }}` | 民族 |
-| `{{ guarantor1.education }}` | 学历 |
-| `{{ guarantor1.occupation }}` | 职业 |
-
-### 3.7 抵押物 (支持5个)
-使用 `collateral1` 到 `collateral5`。
-| 变量名 (以第1个为例) | 说明 |
-| :--- | :--- |
-| `{{ collateral1.owner }}` | 所有权人 |
-| `{{ collateral1.type }}` | 抵押物类型 |
-| `{{ collateral1.cert_no }}` | 权证编号 |
-| `{{ collateral1.location }}` | 坐落位置 |
-| `{{ collateral1.value }}` | 价值 (小写) |
-| `{{ collateral1.value_cn }}` | 价值 (大写中文) (**新增**) |
-| `{{ collateral1.area }}` | 建筑面积 (含单位"平方米") (**更新**) |
-| `{{ collateral1.land_area }}` | 土地面积 (含单位"平方米") (**新增**) |
-
-## 4. 生产环境配置
-
-### 4.1 日志记录
-系统已配置自动日志记录，日志文件位于 `backend/app.log`。
-- **日志级别**：INFO
-- **文件大小限制**：10MB（自动轮转，保留5个备份）
-
-### 4.2 数据维护
-- **支行信息**：修改 `backend/branches.json`。支持配置 `short_name` (支行简称)。
-- **下拉选项**：修改 `backend/data.json`
-
-## 5. 常见问题
-- **Q**: 模板里写了 `guarantor2` 但实际只有一个担保人怎么办？
-- **A**: 系统会自动用空值填充，Word 文档对应位置会显示为空白，不会报错。
-- **Q**: 抵押物面积需要自己填单位吗？
-- **A**: 不需要。系统会自动识别。如果您只填了数字（如 `100`），系统生成时会自动补上 `平方米`（输出为 `100平方米`）。如果您已经填了单位，系统不会重复添加。
+## 5. 开发建议
+如果您需要二次开发：
+- 后端开启热重载：`python main.py` (非打包模式下自动开启)
+- 前端自动代理：开发时前端运行在 5173，会自动代理请求到后端的 8090 端口。
