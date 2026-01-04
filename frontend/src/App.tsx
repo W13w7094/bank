@@ -757,36 +757,35 @@ function App() {
         )}
         <Button type="primary" htmlType="submit" size="large" block loading={loading} icon={<PrinterOutlined />} style={{ height: '56px', fontSize: '18px', marginTop: 32 }}>一键生成文件</Button>
       </Card>
-      )
-}
+    }
   ].filter(Boolean);
 
-if (initLoading) return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Spin size="large" tip="系统初始化中..." /></div>;
+  if (initLoading) return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Spin size="large" tip="系统初始化中..." /></div>;
 
-return (
-  <ConfigProvider theme={{ token: { colorPrimary: PRIMARY_COLOR, borderRadius: 6 } }}>
-    <Layout style={{ minHeight: '100vh' }}>
-      <Header style={{ padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 2px 8px #f0f1f2', zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}><AppstoreOutlined style={{ fontSize: 28, color: PRIMARY_COLOR, marginRight: 12 }} /><Title level={4} style={{ margin: 0 }}>信贷合同系统 Pro</Title></div>
-        <Space>
-          <Upload beforeUpload={handleImport} showUploadList={false} accept=".txt"><Button icon={<ImportOutlined />}>导入存档 (.txt)</Button></Upload>
-          <Button icon={<ReloadOutlined />} onClick={() => window.location.reload()}>重置</Button>
-          <Tag color="green">v1.2 调查报告</Tag>
-        </Space>
-      </Header>
-      <Content style={{ padding: '24px' }}>
-        <Row justify="center">
-          <Col span={18}>
-            <Form form={form} layout="vertical" onFinish={onFinish} onValuesChange={onFormValuesChange}>
-              <Tabs defaultActiveKey="1" items={getTabItems() as any} type="line" size="large" />
-            </Form>
-          </Col>
-        </Row>
-      </Content>
+  return (
+    <ConfigProvider theme={{ token: { colorPrimary: PRIMARY_COLOR, borderRadius: 6 } }}>
+      <Layout style={{ minHeight: '100vh' }}>
+        <Header style={{ padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 2px 8px #f0f1f2', zIndex: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}><AppstoreOutlined style={{ fontSize: 28, color: PRIMARY_COLOR, marginRight: 12 }} /><Title level={4} style={{ margin: 0 }}>信贷合同系统 Pro</Title></div>
+          <Space>
+            <Upload beforeUpload={handleImport} showUploadList={false} accept=".txt"><Button icon={<ImportOutlined />}>导入存档 (.txt)</Button></Upload>
+            <Button icon={<ReloadOutlined />} onClick={() => window.location.reload()}>重置</Button>
+            <Tag color="green">v1.2 调查报告</Tag>
+          </Space>
+        </Header>
+        <Content style={{ padding: '24px' }}>
+          <Row justify="center">
+            <Col span={18}>
+              <Form form={form} layout="vertical" onFinish={onFinish} onValuesChange={onFormValuesChange}>
+                <Tabs defaultActiveKey="1" items={getTabItems() as any} type="line" size="large" />
+              </Form>
+            </Col>
+          </Row>
+        </Content>
 
-    </Layout>
-  </ConfigProvider>
-);
+      </Layout>
+    </ConfigProvider>
+  );
 }
 
 export default App;
