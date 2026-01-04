@@ -400,7 +400,7 @@ function App() {
         age: currentSpouseFormValues.age,
       };
 
-      const newSpouseItem = {
+      const spouseAsBorrower = {
         ...spouseData,
         ...extraInfo, // 覆盖性别/生日/年龄
         age: extraInfo.age ? String(extraInfo.age) : (spouseData.age ? String(spouseData.age) : ''), // 强制转字符串
