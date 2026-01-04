@@ -608,7 +608,7 @@ async def generate_contract(data: ContractRequest):
 
 @app.post("/api/generate-investigation-report")
 async def generate_investigation_report(data: ContractRequest):
-    """生成客户调查报告"""
+    """生成客户调查报告（简洁版）"""
     try:
         # Pre-calculate derived data
         if data.main_borrower:
@@ -622,57 +622,69 @@ async def generate_investigation_report(data: ContractRequest):
         for c in data.collaterals:
             c.value_cn = num_to_cn(c.value)
         
-        # Determine marital status
-        main_marital_status = "已婚" if data.spouse and data.spouse.name else "未婚"
+        # Build main borrower summary
+        if data.main_borrower:
+            mb = data.main_borrower
+            main_summary = f"{mb.name}，{mb.gender}，{mb.age}岁，身份证号：{mb.id_card}，"
+            main_summary += f"联系电话：{mb.mobile}，职业：{mb.occupation or '无'}，"
+            main_summary += f"学历：{mb.education or '无'}，现住址：{mb.address}。"
+            
+            if data.spouse and data.spouse.name:
+                sp = data.spouse
+                main_summary += f" 配偶{sp.name}，{sp.gender}，{sp.age}岁，"
+                main_summary += f"身份证号：{sp.id_card}，联系电话：{sp.mobile}。"
+        else:
+            main_summary = "无"
         
-        # Prepare report context
+        # Build joint borrowers summary
+        if data.joint_borrowers:
+            jb_items = []
+            for i, jb in enumerate(data.joint_borrowers, 1):
+                jb_text = f"{i}. {jb.name}，{jb.gender}，{jb.age}岁，身份证号：{jb.id_card}，"
+                jb_text += f"联系电话：{jb.mobile}，职业：{jb.occupation or '无'}，"
+                jb_text += f"与借款人关系：{jb.relation or '无'}，住址：{jb.address}。"
+                jb_items.append(jb_text)
+            joint_summary = "\n".join(jb_items)
+        else:
+            joint_summary = "无"
+        
+        # Build guarantors summary
+        if data.guarantors:
+            g_items = []
+            for i, g in enumerate(data.guarantors, 1):
+                g_text = f"{i}. {g.name}，{g.gender}，{g.age}岁，身份证号：{g.id_card}，"
+                g_text += f"联系电话：{g.mobile}，职业：{g.occupation or '无'}，"
+                g_text += f"与借款人关系：{g.relation or '无'}，住址：{g.address}。"
+                g_items.append(g_text)
+            guarantors_summary = "\n".join(g_items)
+        else:
+            guarantors_summary = "无"
+        
+        # Build collaterals summary
+        if data.collaterals:
+            c_items = []
+            for i, c in enumerate(data.collaterals, 1):
+                c_text = f"{i}. {c.type}，坐落于{c.location}，"
+                c_text += f"权证号：{c.cert_no}，建筑面积：{c.area}，"
+                if c.land_area:
+                    c_text += f"土地面积：{c.land_area}，"
+                c_text += f"评估价值：{c.value}元（{c.value_cn}）。"
+                c_items.append(c_text)
+            collaterals_summary = "\n".join(c_items)
+        else:
+            collaterals_summary = "无"
+        
+        # Prepare context
         context = {
-            "report_no": f"DC{int(time.time())}",
-            "investigation_date": datetime.now().strftime("%Y年%m月%d日"),
-            "main_borrower": data.main_borrower.dict() if data.main_borrower else {},
-            "main_marital_status": main_marital_status,
-            "spouse": data.spouse.dict() if data.spouse else {"name": "无", "id_card": "", "phone": "", "occupation": ""},
+            "loan_use": data.loan_use,
             "loan_amount": data.loan_amount,
             "loan_amount_cn": num_to_cn(data.loan_amount),
             "loan_term": data.loan_term,
-            "annual_rate": data.annual_rate,
-            "loan_use": data.loan_use,
+            "main_borrower_summary": main_summary,
+            "joint_borrowers_summary": joint_summary,
+            "guarantors_summary": guarantors_summary,
+            "collaterals_summary": collaterals_summary,
         }
-        
-        # Format collaterals
-        if data.collaterals:
-            collaterals_list = []
-            for i, c in enumerate(data.collaterals, 1):
-                collaterals_list.append(
-                    f"{i}. {c.type} - {c.location}\n"
-                    f"   权证号：{c.cert_no}\n"
-                    f"   评估价值：{c.value}元（{c.value_cn}）\n"
-                    f"   建筑面积：{c.area}㎡，土地面积：{c.land_area}㎡"
-                )
-            context["collaterals_info"] = "\n".join(collaterals_list)
-            context["guarantee_summary"] = f"抵押物{len(data.collaterals)}处"
-        else:
-            context["collaterals_info"] = "无"
-            context["guarantee_summary"] = "无抵押物"
-        
-        # Format guarantors
-        if data.guarantors:
-            guarantors_list = []
-            for i, g in enumerate(data.guarantors, 1):
-                guarantors_list.append(
-                    f"{i}. {g.name}，{g.age}岁，{g.gender}，{g.id_card}\n"
-                    f"   联系电话：{g.phone}，职业：{g.occupation}"
-                )
-            context["guarantors_info"] = "\n".join(guarantors_list)
-            context["guarantee_summary"] += f"，担保人{len(data.guarantors)}人"
-        else:
-            context["guarantors_info"] = "无"
-        
-        # Recommendation
-        if data.collaterals or data.guarantors:
-            context["recommendation"] = "予以审批"
-        else:
-            context["recommendation"] = "谨慎审批，需补充担保措施"
         
         # Load template
         template_path = os.path.join(TEMPLATE_DIR, "investigation_report.docx")

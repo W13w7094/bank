@@ -358,3 +358,11 @@
 2026-01-04 08:11:58,144 - uvicorn.access - INFO - 127.0.0.1:59781 - "GET /api/config HTTP/1.1" 200
 2026-01-04 08:11:58,150 - uvicorn.access - INFO - 127.0.0.1:59784 - "GET /api/branches HTTP/1.1" 200
 2026-01-04 08:11:58,151 - uvicorn.access - INFO - 127.0.0.1:59785 - "GET /api/config HTTP/1.1" 200
+2026-01-04 08:12:47,380 - uvicorn.access - INFO - 127.0.0.1:59899 - "GET /api/branches HTTP/1.1" 200
+2026-01-04 08:12:47,382 - uvicorn.access - INFO - 127.0.0.1:59900 - "GET /api/config HTTP/1.1" 200
+2026-01-04 08:12:47,383 - uvicorn.access - INFO - 127.0.0.1:59899 - "GET /api/branches HTTP/1.1" 200
+2026-01-04 08:12:47,384 - uvicorn.access - INFO - 127.0.0.1:59900 - "GET /api/config HTTP/1.1" 200
+2026-01-04 08:13:54,501 - uvicorn.access - INFO - 127.0.0.1:59964 - "OPTIONS /api/generate-investigation-report HTTP/1.1" 200
+2026-01-04 08:13:54,510 - uvicorn.access - INFO - 127.0.0.1:59964 - "POST /api/generate-investigation-report HTTP/1.1" 422
+2026-01-04 08:14:19,755 - uvicorn.access - INFO - 127.0.0.1:59966 - "OPTIONS /api/generate HTTP/1.1" 200
+2026-01-04 08:14:19,763 - uvicorn.access - INFO - 127.0.0.1:59966 - "POST /api/generate HTTP/1.1" 422
