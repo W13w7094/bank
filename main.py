@@ -836,20 +836,50 @@ async def generate_investigation_report(data: dict):
 
 if __name__ == "__main__":
     import uvicorn
+    import socket
+    import webbrowser
+    import threading
+    import time
+    
     os.makedirs(TEMPLATE_DIR, exist_ok=True)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    logger.info("服务启动成功，请访问 http://localhost:8000")
-    # log_config=None 禁止 Uvicorn 配置自己的日志（它会尝试访问 stdout 导致 noconsole 模式崩溃）
-    # 我们上面已经配置了 logging.basicConfig
-    print(">>> Starting Uvicorn server...")
     
-    # 检查是否是打包后的环境
+    def find_available_port(start_port=8090, max_attempts=10):
+        """寻找可用端口"""
+        for port in range(start_port, start_port + max_attempts):
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                if s.connect_ex(('localhost', port)) != 0:
+                    return port
+        return start_port  # 实在找不到就头铁试一下
+
+    def open_browser(url):
+        """延迟打开浏览器"""
+        time.sleep(1.5)  # 等待服务器启动
+        webbrowser.open(url)
+
+    # 1. 确定端口
+    PORT = find_available_port(8090)
+    HOST = "0.0.0.0"
+    
+    logger.info(f"服务即将启动在: http://localhost:{PORT}")
+    
+    # 2. 检查环境
     is_packaged = getattr(sys, "frozen", False)
     
     if is_packaged:
-        # 生产环境：不使用reload
-        uvicorn.run(app, host="0.0.0.0", port=8000, log_config=None)
+        # 生产环境：自动打开浏览器，固定端口运行
+        server_url = f"http://localhost:{PORT}"
+        # 启动浏览器线程
+        threading.Thread(target=open_browser, args=(server_url,), daemon=True).start()
+        
+        # 启动服务器 (生产环境不使用reload)
+        uvicorn.run(app, host=HOST, port=PORT, log_config=None)
     else:
-        # 开发环境：启用热重载 - 自动检测代码变化并重启
-        logger.info("🔥 开发模式：已启用热重载")
-        uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, log_config=None)
+        # 开发环境：启用热重载
+        # 注意：reload模式下不能简单地自动打开浏览器，因为它会随着reload不断重启
+        # 如果需要开发环境也自动打开，可以取消下面注释，但推荐手动点链接
+        # threading.Thread(target=open_browser, args=(f"http://localhost:{PORT}",), daemon=True).start()
+        
+        logger.info(f"🔥 开发模式：已启用热重载 (端口 {PORT})")
+        # 开发模式热重载通常需要 "main:app" string
+        uvicorn.run("main:app", host=HOST, port=PORT, reload=True, log_config=None)
