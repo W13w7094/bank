@@ -238,12 +238,10 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [initLoading, setInitLoading] = useState(true);
   const [hasSpouse, setHasSpouse] = useState(false);
-
   const [syncSpouse, setSyncSpouse] = useState(true);
-
   const [customerType, setCustomerType] = useState<'personal' | 'enterprise'>('personal');
   const [loanType, setLoanType] = useState<'credit' | 'guarantee' | 'mortgage'>('guarantee');
-
+  const [templateSearch, setTemplateSearch] = useState('');  // New: template search
   const [branchList, setBranchList] = useState<any[]>([]);
   const [branchOptions, setBranchOptions] = useState<any[]>([]);
   const [systemOptions, setSystemOptions] = useState<any>({ education: [], ethnicity: [], occupation: [], loan_use: [], collateral_type: [] });
@@ -308,36 +306,7 @@ function App() {
     return false;
   };
 
-  // Investigation report generation
-  const handleGenerateReport = async () => {
-    try {
-      const values = await form.validateFields();
-      values.customer_type = customerType;
-      values.loan_type = loanType;
-      if (!hasSpouse) values.spouse = null;
-      if (values.start_date) values.start_date = values.start_date.format('YYYY-MM-DD');
-      if (values.end_date) values.end_date = values.end_date.format('YYYY-MM-DD');
-
-      setLoading(true);
-      const response = await axios.post(`${BASE_URL}/api/generate-investigation-report`, values, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `调查报告_${customerType === 'personal' ? values.main_borrower.name : values.enterprise.name}.docx`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      message.success('调查报告生成成功！');
-    } catch (error: any) {
-      if (error.response?.data) {
-        message.error('生成失败，请检查数据完整性');
-      } else {
-        message.error(error.message || '生成失败');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  // No separate investigation report handler needed
 
 
 
@@ -508,10 +477,23 @@ function App() {
   };
 
   const filteredTemplates = allTemplates.filter(t => {
+    // Filter by type
     if (t.type !== 'both' && t.type !== customerType) return false;
+    // Filter by loan type
     if (loanType === 'credit' && t.need_guarantee) return false;
+    // Filter by search text
+    if (templateSearch && !t.label.toLowerCase().includes(templateSearch.toLowerCase())) {
+      return false;
+    }
     return true;
   });
+
+  // Helper to get file extension and type
+  const getTemplateInfo = (filename: string) => {
+    const ext = filename.split('.').pop()?.toUpperCase() || '';
+    const isExcel = ext === 'XLSX' || ext === 'XLS';
+    return { ext, isExcel, color: isExcel ? '#52c41a' : '#1890ff' };
+  };
 
   const getTabItems = () => [
     {
@@ -603,12 +585,48 @@ function App() {
             <Col span={5}><Form.Item name="start_date" label="起始日" rules={[RULES.required]}><DatePicker size="large" style={{ width: '100%' }} /></Form.Item></Col>
             <Col span={5}><Form.Item name="end_date" label="到期日" rules={[RULES.required]}><DatePicker size="large" style={{ width: '100%' }} /></Form.Item></Col>
           </Row>
-          <Divider /><Title level={5}>选择模板</Title>
-          <Form.Item name="selected_templates" rules={[{ required: true, message: '请选择模板' }]}><Checkbox.Group style={{ width: '100%' }}><Row gutter={[16, 16]}>{filteredTemplates.map(t => (<Col span={12} key={t.value}><div style={{ border: '1px solid #f0f0f0', padding: '16px', borderRadius: '8px', background: '#fafafa' }}><Checkbox value={t.value}>{t.label}</Checkbox></div></Col>))}</Row></Checkbox.Group></Form.Item>
-          <Space direction="vertical" style={{ width: '100%', marginTop: 32 }} size="middle">
-            <Button type="primary" htmlType="submit" size="large" block loading={loading} icon={<PrinterOutlined />} style={{ height: '56px', fontSize: '18px' }}>一键生成合同文件</Button>
-            <Button type="default" size="large" block onClick={handleGenerateReport} loading={loading} icon={<SolutionOutlined />} style={{ height: '48px', fontSize: '16px', borderColor: '#52c41a', color: '#52c41a' }}>生成客户调查报告</Button>
-          </Space>
+          <Divider />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Title level={5} style={{ margin: 0 }}>选择模板</Title>
+            <Input.Search
+              placeholder="搜索模板..."
+              allowClear
+              style={{ width: 300 }}
+              value={templateSearch}
+              onChange={e => setTemplateSearch(e.target.value)}
+            />
+          </div>
+          <Form.Item name="selected_templates" rules={[{ required: true, message: '请选择模板' }]}>
+            <Checkbox.Group style={{ width: '100%' }}>
+              <Row gutter={[16, 16]}>
+                {filteredTemplates.map(t => {
+                  const info = getTemplateInfo(t.filename);
+                  return (
+                    <Col span={12} key={t.value}>
+                      <div style={{
+                        border: '1px solid #f0f0f0',
+                        padding: '16px',
+                        borderRadius: '8px',
+                        background: '#fafafa',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}>
+                        <Checkbox value={t.value}>{t.label}</Checkbox>
+                        <Tag color={info.color}>{info.ext}</Tag>
+                      </div>
+                    </Col>
+                  );
+                })}
+              </Row>
+            </Checkbox.Group>
+          </Form.Item>
+          {filteredTemplates.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+              <Text type="secondary">未找到匹配的模板</Text>
+            </div>
+          )}
+          <Button type="primary" htmlType="submit" size="large" block loading={loading} icon={<PrinterOutlined />} style={{ height: '56px', fontSize: '18px', marginTop: 32 }}>一键生成文件</Button>
         </Card>
       )
     }

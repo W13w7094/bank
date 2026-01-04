@@ -56,14 +56,6 @@
     },
     "templates": [
         {
-            "label": "客户调查报告",
-            "filename": "investigation_report.docx",
-            "value": "investigation_report",
-            "type": "both",
-            "need_guarantee": false,
-            "is_report": true
-        },
-        {
             "label": "个人借款合同 (标准版)",
             "filename": "loan_contract_person.docx",
             "type": "personal",
