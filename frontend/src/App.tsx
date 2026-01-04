@@ -467,15 +467,39 @@ function App() {
       link.remove();
       message.success('生成成功！(含 .txt 存档)');
     } catch (error: any) {
-      // 详细的错误处理
+      // 详细的错误处理 - 处理Blob响应
       if (error.response) {
         const status = error.response.status;
-
+        
         if (status === 422) {
-          // 数据验证错误
-          let errorMsg = '数据验证失败：\n';
-          if (error.response.data && error.response.data.detail) {
+          // 数据验证错误 - Blob需要转换为JSON
+          if (error.response.data instanceof Blob) {
+            error.response.data.text().then((text: string) => {
+              try {
+                const jsonData = JSON.parse(text);
+                console.log('解析后的422错误:', jsonData);
+                
+                if (jsonData.detail && Array.isArray(jsonData.detail)) {
+                  let msg = '数据验证失败：\n';
+                  jsonData.detail.forEach((err: any) => {
+                    const field = err.loc ? err.loc.join('.') : '未知字段';
+                    msg += `- ${field}: ${err.msg}\n`;
+                  });
+                  message.error(msg, 8);
+                } else if (typeof jsonData.detail === 'string') {
+                  message.error(jsonData.detail, 5);
+                } else {
+                  message.error('请检查所有必填字段是否已填写', 5);
+                }
+              } catch (e) {
+                console.error('解析Blob错误:', e);
+                message.error('请检查所有必填字段是否已填写', 5);
+              }
+            });
+          } else if (error.response.data?.detail) {
+            // 非Blob的情况
             const details = error.response.data.detail;
+            let errorMsg = '数据验证失败：\n';
             if (Array.isArray(details)) {
               details.forEach((err: any) => {
                 const field = err.loc ? err.loc.join('.') : '未知字段';
@@ -484,16 +508,25 @@ function App() {
             } else if (typeof details === 'string') {
               errorMsg = details;
             }
+            message.error(errorMsg, 5);
           } else {
-            errorMsg = '请检查所有必填字段是否已填写';
+            message.error('请检查所有必填字段是否已填写', 5);
           }
-          message.error(errorMsg, 5);
-          console.error('验证错误详情:', error.response.data);
         } else if (status === 500) {
           // 服务器错误
-          const errorDetail = error.response.data?.detail || '服务器内部错误';
-          message.error(`生成失败: ${errorDetail}`, 5);
-          console.error('服务器错误:', error.response.data);
+          if (error.response.data instanceof Blob) {
+            error.response.data.text().then((text: string) => {
+              try {
+                const jsonData = JSON.parse(text);
+                message.error(`生成失败: ${jsonData.detail || '服务器内部错误'}`, 5);
+              } catch (e) {
+                message.error('生成失败: 服务器内部错误', 5);
+              }
+            });
+          } else {
+            const errorDetail = error.response.data?.detail || '服务器内部错误';
+            message.error(`生成失败: ${errorDetail}`, 5);
+          }
         } else {
           message.error(`请求失败 (${status})`, 3);
         }
@@ -506,6 +539,7 @@ function App() {
     } finally {
       setLoading(false);
     }
+
   };
 
   const filteredTemplates = allTemplates.filter(t => {
