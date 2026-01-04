@@ -457,6 +457,7 @@ function App() {
     }
 
     try {
+      console.log('=== 提交的数据 ===', JSON.stringify(values, null, 2));
       const response = await axios.post(API_URL, values, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
