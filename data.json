@@ -67,55 +67,64 @@
             "label": "个人借款合同 (标准版)",
             "filename": "loan_contract_person.docx",
             "type": "personal",
-            "need_guarantee": false
+            "need_guarantee": false,
+            "value": "loan_contract_person"
         },
         {
             "label": "流动资金借款合同 (对公/企业)",
             "filename": "loan_contract_ent.docx",
             "type": "enterprise",
-            "need_guarantee": false
+            "need_guarantee": false,
+            "value": "loan_contract_ent"
         },
         {
             "label": "借新还旧协议书",
             "filename": "refinance_agreement.docx",
             "type": "both",
-            "need_guarantee": false
+            "need_guarantee": false,
+            "value": "refinance_agreement"
         },
         {
             "label": "无还本续贷承诺书",
             "filename": "renewal_promise.docx",
             "type": "both",
-            "need_guarantee": false
+            "need_guarantee": false,
+            "value": "renewal_promise"
         },
         {
             "label": "共同借款承诺书",
             "filename": "joint_promise.docx",
             "type": "both",
-            "need_guarantee": false
+            "need_guarantee": false,
+            "value": "joint_promise"
         },
         {
             "label": "最高额保证合同 (担保人用)",
             "filename": "guarantee.docx",
             "type": "both",
-            "need_guarantee": true
+            "need_guarantee": true,
+            "value": "guarantee"
         },
         {
             "label": "最高额抵押合同",
             "filename": "mortgage.docx",
             "type": "both",
-            "need_guarantee": true
+            "need_guarantee": true,
+            "value": "mortgage"
         },
         {
             "label": "配偶同意声明书",
             "filename": "spouse_consent.docx",
             "type": "personal",
-            "need_guarantee": false
+            "need_guarantee": false,
+            "value": "spouse_consent"
         },
         {
             "label": "贷款审批简表 (Excel导出)",
             "filename": "approval_sheet.xlsx",
             "type": "personal",
-            "need_guarantee": false
+            "need_guarantee": false,
+            "value": "approval_sheet"
         }
     ]
 }
