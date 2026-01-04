@@ -13,8 +13,10 @@ import {
   SolutionOutlined, IdcardOutlined,
   ShopOutlined, AppstoreOutlined,
   DownOutlined, HomeOutlined, GoldOutlined, ImportOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  CalculatorOutlined
 } from '@ant-design/icons';
+import { LoanCalculator } from './LoanCalculator';
 
 
 
@@ -246,33 +248,34 @@ function App() {
   const [allTemplates, setAllTemplates] = useState<any[]>([]);
 
   // No OCR states needed
+  const [calculatorVisible, setCalculatorVisible] = useState(false);
+  const [businessRules, setBusinessRules] = useState<any>({});
 
   const [form] = Form.useForm();
 
   // 1. 初始化
   useEffect(() => {
-    const initData = async () => {
+    // 获取配置
+    const fetchConfig = async () => {
       try {
-        const [branchRes, configRes] = await Promise.all([axios.get(BRANCH_API_URL), axios.get(CONFIG_API_URL)]);
+        const [branchRes, configRes] = await Promise.all([
+          axios.get(BRANCH_API_URL),
+          axios.get(CONFIG_API_URL)
+        ]);
         if (Array.isArray(branchRes.data)) {
-          setBranchList(branchRes.data);
           setBranchList(branchRes.data);
           setBranchOptions(branchRes.data.map((b: any) => ({ label: `${b.name} (${b.short_name || '无简称'})`, value: b.name })));
         }
         if (configRes.data) {
-          const opts = configRes.data.options;
-          setSystemOptions({
-            education: (opts.education || []).map((v: string) => ({ value: v })),
-            ethnicity: (opts.ethnicity || []).map((v: string) => ({ value: v })),
-            occupation: (opts.occupation || []).map((v: string) => ({ value: v })),
-            loan_use: (opts.loan_use || []).map((v: string) => ({ value: v })),
-            collateral_type: (opts.collateral_type || []).map((v: string) => ({ value: v })),
-          });
+          setSystemOptions(configRes.data.options || {});
           setAllTemplates(configRes.data.templates || []);
+          setBusinessRules(configRes.data.business_rules || {});
         }
-      } catch (err) { } finally { setInitLoading(false); }
+      } catch (error) {
+        message.error('加载配置失败');
+      }
     };
-    initData();
+    fetchConfig();
   }, []);
 
   // 2. 导入
@@ -655,89 +658,135 @@ function App() {
     loanType !== 'credit' && { key: '4', label: <span style={{ padding: '0 8px' }}><TeamOutlined /> 担保人</span>, children: <PersonList name="guarantors" label="担保人" color="#52c41a" options={systemOptions} /> },
     {
       key: '5', label: <span style={{ padding: '0 8px' }}><PrinterOutlined /> 生成</span>,
-      children: (
-        <Card bordered={false} style={{ borderRadius: 12 }}>
-          <Title level={5}>业务参数</Title>
-          <Row gutter={24}>
-            <Col span={8}><Form.Item name="loan_amount" label="贷款金额" rules={[RULES.required]}><AmountInput /></Form.Item></Col>
-            <Col span={16}><Form.Item name="loan_use" label="用途" rules={[RULES.required]}><EditableSelect options={systemOptions.loan_use} /></Form.Item></Col>
-            <Col span={6}><Form.Item name="loan_term" label="期限(月)" rules={[RULES.required]}><InputNumber style={{ width: '100%' }} size="large" /></Form.Item></Col>
-            <Col span={5}><Form.Item name="start_date" label="起始日" rules={[RULES.required]}><DatePicker size="large" style={{ width: '100%' }} /></Form.Item></Col>
-            <Col span={5}><Form.Item name="end_date" label="到期日" rules={[RULES.required]}><DatePicker size="large" style={{ width: '100%' }} /></Form.Item></Col>
-          </Row>
-          <Divider />
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <Title level={5} style={{ margin: 0 }}>选择模板</Title>
-            <Input.Search
-              placeholder="搜索模板..."
-              allowClear
-              style={{ width: 300 }}
-              value={templateSearch}
-              onChange={e => setTemplateSearch(e.target.value)}
-            />
+      children: <Card title="贷款与抵押信息" bordered={false} style={{ borderRadius: 12 }}>
+        <Row gutter={24}>
+          <Col span={8}>
+            <Form.Item label="贷款金额 (元)" name="loan_amount" rules={[RULES.required]}>
+              <InputNumber style={{ width: '100%' }} size="large" formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={value => value?.replace(/\$\s?|(,*)/g, '') as unknown as number} />
+            </Form.Item>
+          </Col>
+
+          <Col span={8}>
+            <Form.Item label="贷款期限 (月)" name="loan_term" rules={[RULES.required]} help={
+              <div style={{ marginTop: 8 }}>
+                <Form.Item noStyle shouldUpdate={(prev, curr) => prev.loan_term !== curr.loan_term || prev.main_borrower?.age !== curr.main_borrower?.age}>
+                  {() => {
+                    const term = form.getFieldValue('loan_term');
+                    const ageStr = form.getFieldValue(['main_borrower', 'age']);
+                    // 如果年龄是字符串"36"，转数字
+                    const age = parseInt(ageStr) || 0;
+
+                    if (term && age && businessRules.max_age_limit_total) {
+                      if (age + term / 12 > businessRules.max_age_limit_total) {
+                        return <Text type="danger" style={{ fontSize: 12 }}>❌ 借款人年龄({age}) + 期限({(term / 12).toFixed(1)}年) &gt; {businessRules.max_age_limit_total}岁，不符合准入条件</Text>;
+                      }
+                    }
+                    return null;
+                  }}
+                </Form.Item>
+              </div>
+            }>
+              <InputNumber style={{ width: '100%' }} size="large" />
+            </Form.Item>
+          </Col>
+
+          <Col span={8} style={{ display: 'flex', alignItems: 'center', marginTop: '6px' }}>
+            <Button
+              icon={<CalculatorOutlined />}
+              onClick={() => setCalculatorVisible(true)}
+            >
+              贷款试算
+            </Button>
+          </Col>
+
+          <Col span={24}><Form.Item name="loan_use" label="贷款用途" rules={[RULES.required]}><EditableSelect options={options.loan_use ? options.loan_use.map((u: string) => ({ value: u })) : []} /></Form.Item></Col>
+        </Row>
+
+        <LoanCalculator
+          open={calculatorVisible}
+          onCancel={() => setCalculatorVisible(false)}
+          initialAmount={form.getFieldValue('loan_amount')}
+          initialTerm={form.getFieldValue('loan_term')}
+        />
+
+        <Divider orientation="left" style={{ borderColor: '#d9d9d9', fontSize: '14px', color: '#666' }}>抵押物信息 (可选)</Divider>
+        <Row gutter={24}>
+          <Col span={5}><Form.Item name="start_date" label="起始日" rules={[RULES.required]}><DatePicker size="large" style={{ width: '100%' }} /></Form.Item></Col>
+          <Col span={5}><Form.Item name="end_date" label="到期日" rules={[RULES.required]}><DatePicker size="large" style={{ width: '100%' }} /></Form.Item></Col>
+        </Row>
+        <Divider />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <Title level={5} style={{ margin: 0 }}>选择模板</Title>
+          <Input.Search
+            placeholder="搜索模板..."
+            allowClear
+            style={{ width: 300 }}
+            value={templateSearch}
+            onChange={e => setTemplateSearch(e.target.value)}
+          />
+        </div>
+        <Form.Item name="selected_templates" rules={[{ required: true, message: '请选择模板' }]}>
+          <Checkbox.Group style={{ width: '100%' }}>
+            <Row gutter={[16, 16]}>
+              {filteredTemplates.map(t => {
+                const info = getTemplateInfo(t.filename);
+                return (
+                  <Col span={12} key={t.value}>
+                    <div style={{
+                      border: '1px solid #f0f0f0',
+                      padding: '16px',
+                      borderRadius: '8px',
+                      background: '#fafafa',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}>
+                      <Checkbox value={t.value}>{t.label}</Checkbox>
+                      <Tag color={info.color}>{info.ext}</Tag>
+                    </div>
+                  </Col>
+                );
+              })}
+            </Row>
+          </Checkbox.Group>
+        </Form.Item>
+        {filteredTemplates.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+            <Text type="secondary">未找到匹配的模板</Text>
           </div>
-          <Form.Item name="selected_templates" rules={[{ required: true, message: '请选择模板' }]}>
-            <Checkbox.Group style={{ width: '100%' }}>
-              <Row gutter={[16, 16]}>
-                {filteredTemplates.map(t => {
-                  const info = getTemplateInfo(t.filename);
-                  return (
-                    <Col span={12} key={t.value}>
-                      <div style={{
-                        border: '1px solid #f0f0f0',
-                        padding: '16px',
-                        borderRadius: '8px',
-                        background: '#fafafa',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between'
-                      }}>
-                        <Checkbox value={t.value}>{t.label}</Checkbox>
-                        <Tag color={info.color}>{info.ext}</Tag>
-                      </div>
-                    </Col>
-                  );
-                })}
-              </Row>
-            </Checkbox.Group>
-          </Form.Item>
-          {filteredTemplates.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
-              <Text type="secondary">未找到匹配的模板</Text>
-            </div>
-          )}
-          <Button type="primary" htmlType="submit" size="large" block loading={loading} icon={<PrinterOutlined />} style={{ height: '56px', fontSize: '18px', marginTop: 32 }}>一键生成文件</Button>
-        </Card>
+        )}
+        <Button type="primary" htmlType="submit" size="large" block loading={loading} icon={<PrinterOutlined />} style={{ height: '56px', fontSize: '18px', marginTop: 32 }}>一键生成文件</Button>
+      </Card>
       )
-    }
+}
   ].filter(Boolean);
 
-  if (initLoading) return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Spin size="large" tip="系统初始化中..." /></div>;
+if (initLoading) return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Spin size="large" tip="系统初始化中..." /></div>;
 
-  return (
-    <ConfigProvider theme={{ token: { colorPrimary: PRIMARY_COLOR, borderRadius: 6 } }}>
-      <Layout style={{ minHeight: '100vh' }}>
-        <Header style={{ padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 2px 8px #f0f1f2', zIndex: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}><AppstoreOutlined style={{ fontSize: 28, color: PRIMARY_COLOR, marginRight: 12 }} /><Title level={4} style={{ margin: 0 }}>信贷合同系统 Pro</Title></div>
-          <Space>
-            <Upload beforeUpload={handleImport} showUploadList={false} accept=".txt"><Button icon={<ImportOutlined />}>导入存档 (.txt)</Button></Upload>
-            <Button icon={<ReloadOutlined />} onClick={() => window.location.reload()}>重置</Button>
-            <Tag color="green">v1.2 调查报告</Tag>
-          </Space>
-        </Header>
-        <Content style={{ padding: '24px' }}>
-          <Row justify="center">
-            <Col span={18}>
-              <Form form={form} layout="vertical" onFinish={onFinish} onValuesChange={onFormValuesChange}>
-                <Tabs defaultActiveKey="1" items={getTabItems() as any} type="line" size="large" />
-              </Form>
-            </Col>
-          </Row>
-        </Content>
+return (
+  <ConfigProvider theme={{ token: { colorPrimary: PRIMARY_COLOR, borderRadius: 6 } }}>
+    <Layout style={{ minHeight: '100vh' }}>
+      <Header style={{ padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 2px 8px #f0f1f2', zIndex: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}><AppstoreOutlined style={{ fontSize: 28, color: PRIMARY_COLOR, marginRight: 12 }} /><Title level={4} style={{ margin: 0 }}>信贷合同系统 Pro</Title></div>
+        <Space>
+          <Upload beforeUpload={handleImport} showUploadList={false} accept=".txt"><Button icon={<ImportOutlined />}>导入存档 (.txt)</Button></Upload>
+          <Button icon={<ReloadOutlined />} onClick={() => window.location.reload()}>重置</Button>
+          <Tag color="green">v1.2 调查报告</Tag>
+        </Space>
+      </Header>
+      <Content style={{ padding: '24px' }}>
+        <Row justify="center">
+          <Col span={18}>
+            <Form form={form} layout="vertical" onFinish={onFinish} onValuesChange={onFormValuesChange}>
+              <Tabs defaultActiveKey="1" items={getTabItems() as any} type="line" size="large" />
+            </Form>
+          </Col>
+        </Row>
+      </Content>
 
-      </Layout>
-    </ConfigProvider>
-  );
+    </Layout>
+  </ConfigProvider>
+);
 }
 
 export default App;
