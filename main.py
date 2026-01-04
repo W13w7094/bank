@@ -660,9 +660,10 @@ async def generate_contract(data: ContractRequest):
     date_str = datetime.now().strftime('%Y%m%d')
     prefix = data.enterprise.name if data.customer_type == 'enterprise' else (data.main_borrower.name if data.main_borrower else "客户")
     
-        generated_files = []
-        errors = []  # Initialize errors list here
+    generated_files = []
+    errors = []  # Initialize errors list here
 
+    try:
         # 1. 生成 .TXT (含数据)
         report_name = f"{prefix}_数据存档_{date_str}.txt"
         report_path = os.path.join(temp_dir, report_name)
