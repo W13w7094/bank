@@ -699,7 +699,8 @@ function App() {
             </Button>
           </Col>
 
-          <Col span={24}><Form.Item name="loan_use" label="贷款用途" rules={[RULES.required]}><EditableSelect options={options.loan_use ? options.loan_use.map((u: string) => ({ value: u })) : []} /></Form.Item></Col>
+
+          <Col span={24}><Form.Item name="loan_use" label="贷款用途" rules={[RULES.required]}><EditableSelect options={systemOptions.loan_use ? systemOptions.loan_use.map((u: any) => ({ value: u.value || u })) : []} /></Form.Item></Col>
         </Row>
 
         <LoanCalculator
