@@ -395,3 +395,51 @@
 2026-01-04 08:32:32,299 - uvicorn.access - INFO - 127.0.0.1:61646 - "GET /api/config HTTP/1.1" 200
 2026-01-04 08:32:32,306 - uvicorn.access - INFO - 127.0.0.1:61649 - "GET /api/branches HTTP/1.1" 200
 2026-01-04 08:32:32,306 - uvicorn.access - INFO - 127.0.0.1:61650 - "GET /api/config HTTP/1.1" 200
+2026-01-04 08:34:26,611 - uvicorn.access - INFO - 127.0.0.1:61803 - "GET /api/branches HTTP/1.1" 200
+2026-01-04 08:34:26,613 - uvicorn.access - INFO - 127.0.0.1:61804 - "GET /api/config HTTP/1.1" 200
+2026-01-04 08:34:26,614 - uvicorn.access - INFO - 127.0.0.1:61803 - "GET /api/branches HTTP/1.1" 200
+2026-01-04 08:34:26,615 - uvicorn.access - INFO - 127.0.0.1:61804 - "GET /api/config HTTP/1.1" 200
+2026-01-04 08:34:49,138 - uvicorn.access - INFO - 127.0.0.1:61833 - "POST /api/generate HTTP/1.1" 422
+2026-01-04 08:35:15,034 - uvicorn.access - INFO - 127.0.0.1:61880 - "POST /api/generate HTTP/1.1" 422
+2026-01-04 08:37:20,415 - uvicorn.access - INFO - 127.0.0.1:62074 - "POST /api/generate HTTP/1.1" 422
+2026-01-04 08:40:12,184 - BankContract - INFO - 使用外部模板目录: /Users/w13w/Downloads/backend_pkg/templates
+2026-01-04 08:40:12,185 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/data.json
+2026-01-04 08:40:12,185 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/branches.json
+2026-01-04 08:40:12,215 - BankContract - INFO - 服务启动成功，请访问 http://localhost:8000
+2026-01-04 08:40:12,223 - uvicorn.error - INFO - Started server process [17405]
+2026-01-04 08:40:12,223 - uvicorn.error - INFO - Waiting for application startup.
+2026-01-04 08:40:12,223 - uvicorn.error - INFO - Application startup complete.
+2026-01-04 08:40:12,223 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2026-01-04 08:40:22,811 - uvicorn.access - INFO - 127.0.0.1:62328 - "GET /api/branches HTTP/1.1" 200
+2026-01-04 08:40:22,812 - uvicorn.access - INFO - 127.0.0.1:62329 - "GET /api/config HTTP/1.1" 200
+2026-01-04 08:40:22,813 - uvicorn.access - INFO - 127.0.0.1:62328 - "GET /api/branches HTTP/1.1" 200
+2026-01-04 08:40:22,814 - uvicorn.access - INFO - 127.0.0.1:62329 - "GET /api/config HTTP/1.1" 200
+2026-01-04 08:40:52,424 - uvicorn.access - INFO - 127.0.0.1:62365 - "OPTIONS /api/generate HTTP/1.1" 200
+2026-01-04 08:40:52,432 - uvicorn.access - INFO - 127.0.0.1:62365 - "POST /api/generate HTTP/1.1" 422
+2026-01-04 08:41:24,400 - uvicorn.access - INFO - 127.0.0.1:62367 - "POST /api/generate HTTP/1.1" 422
+2026-01-04 08:41:31,719 - uvicorn.access - INFO - 127.0.0.1:62420 - "POST /api/generate HTTP/1.1" 422
+2026-01-04 08:44:03,249 - uvicorn.access - INFO - 127.0.0.1:62643 - "GET /api/branches HTTP/1.1" 200
+2026-01-04 08:44:03,250 - uvicorn.access - INFO - 127.0.0.1:62644 - "GET /api/config HTTP/1.1" 200
+2026-01-04 08:44:03,251 - uvicorn.access - INFO - 127.0.0.1:62643 - "GET /api/branches HTTP/1.1" 200
+2026-01-04 08:44:03,253 - uvicorn.access - INFO - 127.0.0.1:62644 - "GET /api/config HTTP/1.1" 200
+2026-01-04 08:44:29,404 - uvicorn.access - INFO - 127.0.0.1:62672 - "POST /api/generate HTTP/1.1" 422
+2026-01-04 08:46:12,838 - uvicorn.access - INFO - 127.0.0.1:62801 - "POST /api/generate HTTP/1.1" 422
+2026-01-04 08:46:15,037 - uvicorn.access - INFO - 127.0.0.1:62801 - "GET /api/branches HTTP/1.1" 200
+2026-01-04 08:46:15,039 - uvicorn.access - INFO - 127.0.0.1:62801 - "GET /api/branches HTTP/1.1" 200
+2026-01-04 08:46:15,040 - uvicorn.access - INFO - 127.0.0.1:62809 - "GET /api/config HTTP/1.1" 200
+2026-01-04 08:46:15,042 - uvicorn.access - INFO - 127.0.0.1:62809 - "GET /api/config HTTP/1.1" 200
+2026-01-04 08:46:57,878 - uvicorn.access - INFO - 127.0.0.1:62879 - "POST /api/generate HTTP/1.1" 422
+2026-01-04 08:47:21,393 - uvicorn.access - INFO - 127.0.0.1:62906 - "POST /api/generate HTTP/1.1" 422
+2026-01-04 08:47:28,147 - uvicorn.access - INFO - 127.0.0.1:62917 - "GET /api/config HTTP/1.1" 200
+2026-01-04 08:48:27,343 - uvicorn.access - INFO - 127.0.0.1:62982 - "POST /api/generate HTTP/1.1" 422
+2026-01-04 08:48:30,582 - uvicorn.access - INFO - 127.0.0.1:62982 - "POST /api/generate HTTP/1.1" 422
+2026-01-04 08:49:35,432 - BankContract - INFO - 使用外部模板目录: /Users/w13w/Downloads/backend_pkg/templates
+2026-01-04 08:49:35,432 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/data.json
+2026-01-04 08:49:35,432 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/branches.json
+2026-01-04 08:49:35,456 - BankContract - INFO - 服务启动成功，请访问 http://localhost:8000
+2026-01-04 08:49:35,463 - uvicorn.error - INFO - Started server process [20264]
+2026-01-04 08:49:35,463 - uvicorn.error - INFO - Waiting for application startup.
+2026-01-04 08:49:35,464 - uvicorn.error - INFO - Application startup complete.
+2026-01-04 08:49:35,464 - uvicorn.error - ERROR - [Errno 48] error while attempting to bind on address ('0.0.0.0', 8000): address already in use
+2026-01-04 08:49:35,464 - uvicorn.error - INFO - Waiting for application shutdown.
+2026-01-04 08:49:35,464 - uvicorn.error - INFO - Application shutdown complete.

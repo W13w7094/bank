@@ -466,9 +466,43 @@ function App() {
       link.click();
       link.remove();
       message.success('生成成功！(含 .txt 存档)');
-    } catch (error) {
-      message.error('生成失败，请检查 Word 模板语法 (不要用 tr 标签)');
-      console.error(error);
+    } catch (error: any) {
+      // 详细的错误处理
+      if (error.response) {
+        const status = error.response.status;
+
+        if (status === 422) {
+          // 数据验证错误
+          let errorMsg = '数据验证失败：\n';
+          if (error.response.data && error.response.data.detail) {
+            const details = error.response.data.detail;
+            if (Array.isArray(details)) {
+              details.forEach((err: any) => {
+                const field = err.loc ? err.loc.join('.') : '未知字段';
+                errorMsg += `- ${field}: ${err.msg}\n`;
+              });
+            } else if (typeof details === 'string') {
+              errorMsg = details;
+            }
+          } else {
+            errorMsg = '请检查所有必填字段是否已填写';
+          }
+          message.error(errorMsg, 5);
+          console.error('验证错误详情:', error.response.data);
+        } else if (status === 500) {
+          // 服务器错误
+          const errorDetail = error.response.data?.detail || '服务器内部错误';
+          message.error(`生成失败: ${errorDetail}`, 5);
+          console.error('服务器错误:', error.response.data);
+        } else {
+          message.error(`请求失败 (${status})`, 3);
+        }
+      } else if (error.request) {
+        message.error('无法连接到服务器，请检查后端是否运行');
+      } else {
+        message.error(`发生错误: ${error.message}`);
+      }
+      console.error('生成错误:', error);
     } finally {
       setLoading(false);
     }

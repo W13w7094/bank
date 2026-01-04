@@ -599,10 +599,21 @@ async def generate_contract(data: ContractRequest):
         return FileResponse(zip_path, filename=zip_name, media_type='application/zip')
 
     except Exception as e:
+        logger.error("="*60)
+        logger.error("❌ 生成文件时发生错误")
+        logger.error(f"错误类型: {type(e).__name__}")
+        logger.error(f"错误信息: {str(e)}")
+        logger.error(f"选择的模板: {data.selected_templates if hasattr(data, 'selected_templates') else '未知'}")
+        logger.error("详细堆栈:")
+        logger.error(traceback.format_exc())
+        logger.error("="*60)
+        
         if hasattr(e, 'status_code') and e.status_code == 422:
-            logger.error(f"验证错误: {e.detail}")
-        logger.error(f"Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=422, detail=f"数据验证失败: {e.detail}")
+        
+        # 返回更详细的错误信息
+        error_msg = f"{type(e).__name__}: {str(e)}"
+        raise HTTPException(status_code=500, detail=error_msg)
     finally:
         if os.path.exists(temp_dir): shutil.rmtree(temp_dir)
 
@@ -731,10 +742,16 @@ async def generate_investigation_report(data: dict):
         )
     
     except Exception as e:
-        logger.error(f"生成调查报告错误: {e}")
-        import traceback
+        logger.error("="*60)
+        logger.error("❌ 生成调查报告时发生错误")
+        logger.error(f"错误类型: {type(e).__name__}")
+        logger.error(f"错误信息: {str(e)}")
+        logger.error("详细堆栈:")
         logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error("="*60)
+        
+        error_msg = f"{type(e).__name__}: {str(e)}"
+        raise HTTPException(status_code=500, detail=error_msg)
 
 if __name__ == "__main__":
     import uvicorn
