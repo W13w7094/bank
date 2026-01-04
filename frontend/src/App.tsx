@@ -269,6 +269,8 @@ function App() {
         }
       } catch (error) {
         message.error('加载配置失败');
+      } finally {
+        setInitLoading(false);
       }
     };
     fetchConfig();
