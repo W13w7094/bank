@@ -331,3 +331,30 @@
 2025-12-31 17:29:37,180 - uvicorn.access - INFO - 127.0.0.1:60659 - "POST /api/ocr HTTP/1.1" 200
 2025-12-31 17:33:13,484 - BankContract - INFO - Image preprocessed: 891x634 -> /Users/w13w/Downloads/backend_pkg/temp/ocr_1767173593.png
 2025-12-31 17:33:16,342 - uvicorn.access - INFO - 127.0.0.1:60888 - "POST /api/ocr HTTP/1.1" 200
+2026-01-04 08:10:26,407 - uvicorn.error - INFO - Shutting down
+2026-01-04 08:10:26,510 - uvicorn.error - INFO - Waiting for application shutdown.
+2026-01-04 08:10:26,512 - uvicorn.error - INFO - Application shutdown complete.
+2026-01-04 08:10:26,513 - uvicorn.error - INFO - Finished server process [83308]
+2026-01-04 08:10:50,421 - BankContract - INFO - 使用外部模板目录: /Users/w13w/Downloads/backend_pkg/templates
+2026-01-04 08:10:50,421 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/data.json
+2026-01-04 08:10:50,421 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/branches.json
+2026-01-04 08:11:12,913 - BankContract - INFO - 使用外部模板目录: /Users/w13w/Downloads/backend_pkg/templates
+2026-01-04 08:11:12,914 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/data.json
+2026-01-04 08:11:12,914 - BankContract - INFO - 使用外部配置: /Users/w13w/Downloads/backend_pkg/branches.json
+2026-01-04 08:11:12,946 - BankContract - INFO - 服务启动成功，请访问 http://localhost:8000
+2026-01-04 08:11:12,955 - uvicorn.error - INFO - Started server process [10793]
+2026-01-04 08:11:12,955 - uvicorn.error - INFO - Waiting for application startup.
+2026-01-04 08:11:12,955 - uvicorn.error - INFO - Application startup complete.
+2026-01-04 08:11:12,955 - uvicorn.error - INFO - Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2026-01-04 08:11:28,854 - uvicorn.access - INFO - 127.0.0.1:59699 - "GET /api/branches HTTP/1.1" 200
+2026-01-04 08:11:28,856 - uvicorn.access - INFO - 127.0.0.1:59700 - "GET /api/config HTTP/1.1" 200
+2026-01-04 08:11:28,856 - uvicorn.access - INFO - 127.0.0.1:59699 - "GET /api/branches HTTP/1.1" 200
+2026-01-04 08:11:28,857 - uvicorn.access - INFO - 127.0.0.1:59702 - "GET /api/config HTTP/1.1" 200
+2026-01-04 08:11:51,201 - uvicorn.access - INFO - 127.0.0.1:59747 - "GET /api/branches HTTP/1.1" 200
+2026-01-04 08:11:51,204 - uvicorn.access - INFO - 127.0.0.1:59748 - "GET /api/config HTTP/1.1" 200
+2026-01-04 08:11:51,206 - uvicorn.access - INFO - 127.0.0.1:59747 - "GET /api/branches HTTP/1.1" 200
+2026-01-04 08:11:51,207 - uvicorn.access - INFO - 127.0.0.1:59750 - "GET /api/config HTTP/1.1" 200
+2026-01-04 08:11:58,143 - uvicorn.access - INFO - 127.0.0.1:59780 - "GET /api/branches HTTP/1.1" 200
+2026-01-04 08:11:58,144 - uvicorn.access - INFO - 127.0.0.1:59781 - "GET /api/config HTTP/1.1" 200
+2026-01-04 08:11:58,150 - uvicorn.access - INFO - 127.0.0.1:59784 - "GET /api/branches HTTP/1.1" 200
+2026-01-04 08:11:58,151 - uvicorn.access - INFO - 127.0.0.1:59785 - "GET /api/config HTTP/1.1" 200

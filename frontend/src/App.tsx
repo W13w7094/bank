@@ -249,10 +249,7 @@ function App() {
   const [systemOptions, setSystemOptions] = useState<any>({ education: [], ethnicity: [], occupation: [], loan_use: [], collateral_type: [] });
   const [allTemplates, setAllTemplates] = useState<any[]>([]);
 
-  // OCR State
-  const [ocrLoading, setOcrLoading] = useState(false);
-  const [ocrResult, setOcrResult] = useState('');
-  const [ocrPreview, setOcrPreview] = useState('');
+  // No OCR states needed
 
   const [form] = Form.useForm();
 
@@ -311,33 +308,35 @@ function App() {
     return false;
   };
 
-  const handleOCR = async (file: File) => {
-    // Preview
-    const reader = new FileReader();
-    reader.onload = (e) => setOcrPreview(e.target?.result as string);
-    reader.readAsDataURL(file);
-
-    setOcrLoading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-
+  // Investigation report generation
+  const handleGenerateReport = async () => {
     try {
-      const res = await axios.post(`${BASE_URL}/api/ocr`, formData);
-      if (res.data.text) {
-        setOcrResult(res.data.text);
-        message.success('识别成功');
-      } else if (res.data.error) {
-        message.warning('提示: ' + res.data.error);
-        if (String(res.data.error).includes('PaddleOCR')) {
-          message.info('OCR引擎可能正在冷启动，请重试');
-        }
+      const values = await form.validateFields();
+      values.customer_type = customerType;
+      values.loan_type = loanType;
+      if (!hasSpouse) values.spouse = null;
+      if (values.start_date) values.start_date = values.start_date.format('YYYY-MM-DD');
+      if (values.end_date) values.end_date = values.end_date.format('YYYY-MM-DD');
+
+      setLoading(true);
+      const response = await axios.post(`${BASE_URL}/api/generate-investigation-report`, values, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `调查报告_${customerType === 'personal' ? values.main_borrower.name : values.enterprise.name}.docx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      message.success('调查报告生成成功！');
+    } catch (error: any) {
+      if (error.response?.data) {
+        message.error('生成失败，请检查数据完整性');
+      } else {
+        message.error(error.message || '生成失败');
       }
-    } catch (err) {
-      message.error('OCR请求失败 (可能是后端未就绪)');
     } finally {
-      setOcrLoading(false);
+      setLoading(false);
     }
-    return false;
   };
 
 
@@ -606,7 +605,10 @@ function App() {
           </Row>
           <Divider /><Title level={5}>选择模板</Title>
           <Form.Item name="selected_templates" rules={[{ required: true, message: '请选择模板' }]}><Checkbox.Group style={{ width: '100%' }}><Row gutter={[16, 16]}>{filteredTemplates.map(t => (<Col span={12} key={t.value}><div style={{ border: '1px solid #f0f0f0', padding: '16px', borderRadius: '8px', background: '#fafafa' }}><Checkbox value={t.value}>{t.label}</Checkbox></div></Col>))}</Row></Checkbox.Group></Form.Item>
-          <Button type="primary" htmlType="submit" size="large" block loading={loading} icon={<PrinterOutlined />} style={{ height: '56px', fontSize: '18px', marginTop: 32 }}>一键生成文件</Button>
+          <Space direction="vertical" style={{ width: '100%', marginTop: 32 }} size="middle">
+            <Button type="primary" htmlType="submit" size="large" block loading={loading} icon={<PrinterOutlined />} style={{ height: '56px', fontSize: '18px' }}>一键生成合同文件</Button>
+            <Button type="default" size="large" block onClick={handleGenerateReport} loading={loading} icon={<SolutionOutlined />} style={{ height: '48px', fontSize: '16px', borderColor: '#52c41a', color: '#52c41a' }}>生成客户调查报告</Button>
+          </Space>
         </Card>
       )
     }
@@ -622,54 +624,15 @@ function App() {
           <Space>
             <Upload beforeUpload={handleImport} showUploadList={false} accept=".txt"><Button icon={<ImportOutlined />}>导入存档 (.txt)</Button></Upload>
             <Button icon={<ReloadOutlined />} onClick={() => window.location.reload()}>重置</Button>
-            <Tag color="geekblue">v1.1 OCR</Tag>
+            <Tag color="green">v1.2 调查报告</Tag>
           </Space>
         </Header>
         <Content style={{ padding: '24px' }}>
-          <Row gutter={24} style={{ height: 'calc(100vh - 112px)' }}>
-            {/* Left: Form Area */}
-            <Col span={12} style={{ height: '100%', overflowY: 'auto', paddingRight: 8 }}>
+          <Row justify="center">
+            <Col span={18}>
               <Form form={form} layout="vertical" onFinish={onFinish} onValuesChange={onFormValuesChange}>
                 <Tabs defaultActiveKey="1" items={getTabItems() as any} type="line" size="large" />
               </Form>
-            </Col>
-
-            {/* Right: OCR Area */}
-            <Col span={12} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <Card
-                title={<Space><ScanOutlined style={{ color: PRIMARY_COLOR }} /> 智能识别助手 (OCR)</Space>}
-                style={{ flex: 1, display: 'flex', flexDirection: 'column', borderRadius: 12, border: '1px solid #d9d9d9' }}
-                bodyStyle={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 16 }}
-              >
-                <div style={{ marginBottom: 16, flexShrink: 0 }}>
-                  <Dragger beforeUpload={handleOCR} showUploadList={false} style={{ padding: 16 }}>
-                    <p className="ant-upload-drag-icon"><InboxOutlined style={{ color: PRIMARY_COLOR }} /></p>
-                    <p className="ant-upload-text">点击或拖拽上传证件/权证图片</p>
-                    <p className="ant-upload-hint">支持 JPG/PNG，自动识别文字 (PaddleOCR)</p>
-                  </Dragger>
-                </div>
-
-                {ocrLoading && <div style={{ textAlign: 'center', padding: 20 }}><Spin tip="AI 正在识别中..." /></div>}
-
-                {!ocrLoading && ocrPreview && (
-                  <div style={{ height: 200, marginBottom: 16, display: 'flex', justifyContent: 'center', background: '#fafafa', borderRadius: 8, border: '1px solid #f0f0f0' }}>
-                    <img src={ocrPreview} style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} alt="preview" />
-                  </div>
-                )}
-
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Text strong>识别结果：</Text>
-                    <Button type="primary" size="small" icon={<CopyOutlined />} onClick={() => { navigator.clipboard.writeText(ocrResult); message.success('已复制'); }} disabled={!ocrResult}>复制全部</Button>
-                  </div>
-                  <TextArea
-                    value={ocrResult}
-                    onChange={e => setOcrResult(e.target.value)}
-                    style={{ flex: 1, resize: 'none', background: '#f6ffed', borderColor: '#b7eb8f' }}
-                    placeholder="这里将显示识别出的文字内容..."
-                  />
-                </div>
-              </Card>
             </Col>
           </Row>
         </Content>

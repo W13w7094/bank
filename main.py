@@ -598,6 +598,12 @@ async def generate_contract(data: ContractRequest):
         
         return FileResponse(zip_path, filename=zip_name, media_type='application/zip')
 
+    except Exception as e:
+        if hasattr(e, 'status_code') and e.status_code == 422:
+            logger.error(f"验证错误: {e.detail}")
+        logger.error(f"Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
         if os.path.exists(temp_dir): shutil.rmtree(temp_dir)
 
 @app.post("/api/generate-investigation-report")
