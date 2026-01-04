@@ -156,25 +156,21 @@ const PersonalAttributes = ({ path, isAuto = false, options }: { path: (string |
 const CollateralList = ({ options }: { options: any }) => (
   <Form.List name="collaterals">
     {(fields, { add, remove }) => (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {fields.map(({ key, name, ...restField }, index) => (
-          <div key={key} style={{ background: '#fff', borderRadius: '8px', padding: '24px', borderLeft: `4px solid #faad14`, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <Space><Tag color="gold">#{index + 1}</Tag><Text strong>抵押物</Text></Space>
-              <Button type="text" danger icon={<DeleteOutlined />} onClick={() => remove(name)}>移除</Button>
-            </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {fields.map(({ key, name, ...restField }) => (
+          <Card key={key} size="small" title={`抵押物 ${name + 1}`} extra={<Button type="text" danger icon={<DeleteOutlined />} onClick={() => remove(name)} />} style={{ background: '#fffbe6', border: '1px solid #ffe58f' }}>
             <Row gutter={16}>
-              <Col span={8}><Form.Item {...restField} name={[name, 'owner']} label="所有权人" rules={[RULES.required]}><Input size="large" /></Form.Item></Col>
+              <Col span={8}><Form.Item {...restField} name={[name, 'owner']} label="所有人" rules={[RULES.required]}><Input /></Form.Item></Col>
               <Col span={8}><Form.Item {...restField} name={[name, 'type']} label="类型" rules={[RULES.required]}><EditableSelect options={options.collateral_type} /></Form.Item></Col>
-              <Col span={8}><Form.Item {...restField} name={[name, 'cert_no']} label="权证编号" rules={[RULES.required]}><Input size="large" /></Form.Item></Col>
-              <Col span={24}><Form.Item {...restField} name={[name, 'location']} label="坐落位置" rules={[RULES.required]}><Input size="large" prefix={<HomeOutlined style={{ color: '#ccc' }} />} /></Form.Item></Col>
-              <Col span={12}><Form.Item {...restField} name={[name, 'area']} label="建筑面积" rules={[RULES.required]}><Input size="large" suffix="平方米" /></Form.Item></Col>
-              <Col span={12}><Form.Item {...restField} name={[name, 'land_area']} label="土地面积"><Input size="large" placeholder="如有" suffix="平方米" /></Form.Item></Col>
-              <Col span={12}><Form.Item {...restField} name={[name, 'value']} label="抵押物价值" rules={[RULES.required]}><AmountInput /></Form.Item></Col>
+              <Col span={8}><Form.Item {...restField} name={[name, 'cert_no']} label="权证号" rules={[RULES.required]}><Input /></Form.Item></Col>
+              <Col span={12}><Form.Item {...restField} name={[name, 'location']} label="坐落" rules={[RULES.required]}><Input /></Form.Item></Col>
+              <Col span={6}><Form.Item {...restField} name={[name, 'area']} label="建筑面积" rules={[RULES.required]}><Input suffix="㎡" /></Form.Item></Col>
+              <Col span={6}><Form.Item {...restField} name={[name, 'land_area']} label="土地面积"><Input suffix="㎡" /></Form.Item></Col>
+              <Col span={8}><Form.Item {...restField} name={[name, 'value']} label="评估价值(元)" rules={[RULES.required]}><InputNumber style={{ width: '100%' }} formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={value => value?.replace(/\$\s?|(,*)/g, '') as unknown as number} /></Form.Item></Col>
             </Row>
-          </div>
+          </Card>
         ))}
-        <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />} size="large" style={{ color: '#faad14', borderColor: '#faad14' }}>添加抵押物</Button>
+        <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>添加抵押物</Button>
       </div>
     )}
   </Form.List>
