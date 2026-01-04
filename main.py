@@ -341,16 +341,42 @@ def calculate_age(id_card):
     except:
         return ""
 
+def flatten_context(context, parent_key='', sep='.'):
+    """扁平化字典，支持 nested keys 如 spouse.name"""
+    items = []
+    for k, v in context.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_context(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
 def fill_excel_template(template_path, output_path, context):
+    # 扁平化数据以支持 {{ spouse.name }} 格式
+    flat_context = flatten_context(context)
+    # 合并原始context以防万一
+    flat_context.update(context)
+    
     wb = openpyxl.load_workbook(template_path)
     for sheet in wb.worksheets:
         for row in sheet.iter_rows():
             for cell in row:
                 if cell.value and isinstance(cell.value, str) and "{{" in cell.value:
                     text = cell.value
-                    for key, value in context.items():
-                        val_str = str(value) if value is not None else ""
-                        text = text.replace(f"{{{{{key}}}}}", val_str).replace(f"{{{{ {key} }}}}", val_str)
+                    # 优先替换长键 (如 spouse.name) 防止 spouse 被部分替换
+                    # 但其实直接遍历所有key替换即可，Jinja2风格通常是独立的一块
+                    for key, value in flat_context.items():
+                        if value is None: value = ""
+                        val_str = str(value)
+                        # 简单替换 {{ key }} 和 {{ key.subkey }}
+                        # 注意：需要处理空格如 {{ spouse.name }}
+                        target = f"{{{{{key}}}}}"
+                        target_space = f"{{{{ {key} }}}}"
+                        if target in text:
+                            text = text.replace(target, val_str)
+                        if target_space in text:
+                            text = text.replace(target_space, val_str)
                     cell.value = text
     wb.save(output_path)
     wb.close()
@@ -530,10 +556,20 @@ def generate_investigation_context(data: ContractRequest):
         "loan_amount": data.loan_amount,
         "loan_amount_cn": num_to_cn(data.loan_amount) if data.loan_amount else "零元整",
         "loan_term": data.loan_term,
+        # Standard full names
         "main_borrower_summary": main_summary,
         "joint_borrowers_summary": joint_summary,
         "guarantors_summary": guarantors_summary,
         "collaterals_summary": collaterals_summary,
+        # Aleas (Short names often used in templates)
+        "main_summary": main_summary,
+        "joint_summary": joint_summary,
+        "guarantor_summary": guarantors_summary,
+        "collateral_summary": collaterals_summary,
+        # Raw data access
+        "main_borrower": data.main_borrower,
+        "spouse": data.spouse,
+        "enterprise": data.enterprise
     }
 
 @app.post("/api/generate")
