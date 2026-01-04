@@ -671,12 +671,20 @@ async def generate_contract(data: ContractRequest):
         generated_files.append(report_path)
 
         # 2. 生成合同 (多线程加速)
-        errors = []
         def process_template(tmpl_name):
             if not tmpl_name: return None
             tmpl_path = os.path.join(TEMPLATE_DIR, tmpl_name)
+            
+            # check existence
             if not os.path.exists(tmpl_path):
-                return {"error": f"找不到模板文件: {tmpl_name}"}
+                # 增强调试信息：列出目录下的文件，帮助定位文件名不匹配问题 (e.g. 隐藏后缀/编码差异)
+                try:
+                    existing_files = os.listdir(TEMPLATE_DIR)
+                    logger.error(f"❌ 文件未找到: {os.path.abspath(tmpl_path)}")
+                    logger.error(f"📂 模板目录 ({TEMPLATE_DIR}) 下的文件: {existing_files}")
+                except Exception as ex:
+                    logger.error(f"无法列出模板目录: {ex}")
+                return {"error": f"找不到模板文件: {tmpl_name} (路径: {os.path.abspath(tmpl_path)})"}
 
             base_name, ext = os.path.splitext(tmpl_name)
             save_name = f"{prefix}_{base_name}_{date_str}{ext}"
@@ -684,11 +692,16 @@ async def generate_contract(data: ContractRequest):
 
             try:
                 # Special handling for investigation report
-                if tmpl_name == 'investigation_report.docx':
-                    # Generate investigation report context
+                if tmpl_name == 'investigation_report.docx' or str(tmpl_name).endswith('investigation_report.docx'):
+                    # 1. 先生成专用 summary 上下文
                     report_context = generate_investigation_context(data)
+                    # 2. ✨✨✨ 关键修复：合并全局 context！✨✨✨
+                    # 这样模板里既可以使用专用变量 (main_summary)，也可以使用通用变量 (main_borrower.name, joint_borrower1.age)
+                    full_report_ctx = context.copy()
+                    full_report_ctx.update(report_context)
+                    
                     doc = DocxTemplate(tmpl_path)
-                    doc.render(report_context)
+                    doc.render(full_report_ctx)
                     doc.save(save_path)
                 elif tmpl_name.endswith('.docx'):
                     doc = DocxTemplate(tmpl_path)
