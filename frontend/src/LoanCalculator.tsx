@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, InputNumber, Select, Descriptions, Typography, Radio } from 'antd';
+import { Modal, Form, InputNumber, Select, Descriptions, Typography } from 'antd';
 import { CalculatorOutlined } from '@ant-design/icons';
 
 const { Text } = Typography;
@@ -65,7 +65,7 @@ export const LoanCalculator: React.FC<LoanCalculatorProps> = ({
                 const monthlyP = P / N;
                 const firstMonthInterest = P * r;
                 const firstMonth = monthlyP + firstMonthInterest;
-                const lastMonth = monthlyP + (monthlyP * r); // Last month interest based on remaining principal (which is monthlyP)
+                // const lastMonth = monthlyP + (monthlyP * r); // Unused
                 const totalInterest = (N + 1) * P * r / 2;
                 const total = P + totalInterest;
                 const diff = monthlyP * r;
