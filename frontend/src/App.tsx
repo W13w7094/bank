@@ -757,7 +757,13 @@ function App() {
     }
   ].filter(Boolean);
 
-  if (initLoading) return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Spin size="large" tip="系统初始化中..." /></div>;
+
+  if (initLoading) return (
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '16px' }}>
+      <Spin size="large" />
+      <span style={{ color: '#1677ff' }}>系统初始化中...</span>
+    </div>
+  );
 
   return (
     <ConfigProvider theme={{ token: { colorPrimary: PRIMARY_COLOR, borderRadius: 6 } }}>
