@@ -392,11 +392,20 @@ function App() {
       // Check if spouse already in list (by ID card)
       const spouseIndex = currentJointBorrowers.findIndex((jb: any) => jb.id_card === spouseData.id_card); // Changed `spouse` to `spouseData`
 
-      const spouseAsBorrower = {
-        ...spouseData, // Changed `spouse` to `spouseData`
+      // Get current spouse info from form to ensure latest calculated fields are used
+      const currentSpouseFormValues = form.getFieldValue('spouse') || {};
+      const extraInfo = {
+        gender: currentSpouseFormValues.gender,
+        birthday: currentSpouseFormValues.birthday,
+        age: currentSpouseFormValues.age,
+      };
+
+      const newSpouseItem = {
+        ...spouseData,
+        ...extraInfo, // 覆盖性别/生日/年龄
+        age: extraInfo.age ? String(extraInfo.age) : (spouseData.age ? String(spouseData.age) : ''), // 强制转字符串
         relation: '夫妻',
         is_spouse_auto: true,
-        age: String(spouseData.age || ''), // Ensure age is string, changed `spouse` to `spouseData`
         address: spouseData.address || mainAddr // Added address from spouseData or mainAddr
       };
 
