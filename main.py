@@ -652,6 +652,12 @@ async def generate_contract(data: ContractRequest):
             'branch_short': data.branch.short_name
         })
 
+    # ✨✨✨ 关键修复：全面扁平化所有嵌套数据 ✨✨✨
+    # 这样模板中可以用 {{ spouse.name }}, {{ main_borrower.id_card }}, {{ guarantor1.mobile }} 等
+    flat_context = flatten_context(context)
+    # 合并扁平化的数据回原始context（保留原始结构 + 添加扁平化访问）
+    context.update(flat_context)
+
     task_id = str(int(time.time() * 1000))
     temp_dir = os.path.join(OUTPUT_DIR, task_id)
     os.makedirs(temp_dir, exist_ok=True)
