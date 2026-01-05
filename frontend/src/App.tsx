@@ -286,17 +286,42 @@ function App() {
         if (match && match[1]) {
           const utf8Json = new TextDecoder().decode(Uint8Array.from(atob(match[1]), c => c.charCodeAt(0)));
           const data = JSON.parse(utf8Json);
+
+          // 设置基础状态
           setCustomerType(data.customer_type || 'personal');
           setLoanType(data.loan_type || 'guarantee');
           if (data.spouse) setHasSpouse(true);
+
+          // 转换日期格式
           if (data.start_date) data.start_date = dayjs(data.start_date);
           if (data.end_date) data.end_date = dayjs(data.end_date);
 
           console.log('Parsed Import Data:', data);
+
+          // ✨✨✨ 关键修复：分步骤设置表单，确保列表字段正确初始化 ✨✨✨
           form.resetFields();
+
+          // 先设置所有数据
           form.setFieldsValue(data);
-          // 强制更新一些状态
-          if (data.spouse) setHasSpouse(true);
+
+          // ✨ 强制触发列表字段的重新渲染和验证
+          // 这样 Form.List 可以正确识别初始值
+          setTimeout(() => {
+            // 再次设置一遍列表字段，确保它们被 Form.List 正确捕获
+            if (data.guarantors) {
+              form.setFieldValue('guarantors', data.guarantors);
+            }
+            if (data.joint_borrowers) {
+              form.setFieldValue('joint_borrowers', data.joint_borrowers);
+            }
+            if (data.collaterals) {
+              form.setFieldValue('collaterals', data.collaterals);
+            }
+
+            // 触发表单验证，确保所有字段状态同步
+            form.validateFields().catch(() => { });
+          }, 100);
+
           message.success('数据导入成功！');
         } else { message.error('未找到存档数据'); }
       } catch (err) { message.error('文件解析失败'); }
