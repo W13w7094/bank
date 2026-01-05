@@ -199,31 +199,64 @@ const PersonList = ({ name, label, color, options }: { name: string; label: stri
 
             <Form.Item name={[field.name, 'is_spouse_auto']} hidden><Input /></Form.Item>
 
+            {/* 证件类型选择 */}
             <Row gutter={16}>
-              <Col span={8}><Form.Item name={[field.name, 'name']} label="姓名" rules={[RULES.required]}><Input size="large" /></Form.Item></Col>
-              <Col span={10}>
-                <Form.Item label="证件" required style={{ marginBottom: 0 }}>
-                  <Input.Group compact>
-                    <Form.Item name={[field.name, 'id_type']} noStyle initialValue="身份证"><Select style={{ width: '30%' }} size="large" options={[{ label: '身份证', value: '身份证' }, { label: '营业执照', value: '营业执照' }]} /></Form.Item>
-                    {/* 和主贷人保持一致，依赖全局 onFormValuesChange */}
-                    <Form.Item name={[field.name, 'id_card']} noStyle rules={[RULES.required, RULES.id_card]}><Input style={{ width: '70%' }} size="large" placeholder="输入身份证自动计算" /></Form.Item>
-                  </Input.Group>
+              <Col span={24}>
+                <Form.Item name={[field.name, 'id_type']} label="证件类型" initialValue="身份证">
+                  <Radio.Group size="large" buttonStyle="solid">
+                    <Radio.Button value="身份证">身份证(个人)</Radio.Button>
+                    <Radio.Button value="营业执照">营业执照(企业)</Radio.Button>
+                  </Radio.Group>
                 </Form.Item>
               </Col>
-              <Col span={6}><Form.Item name={[field.name, 'mobile']} label="手机" rules={[RULES.required, RULES.mobile]}><Input size="large" maxLength={11} /></Form.Item></Col>
-              <Col span={24}><Form.Item name={[field.name, 'address']} label="地址" rules={[RULES.required]}><Input size="large" /></Form.Item></Col>
-
-              <Col span={24}><Divider dashed style={{ margin: '8px 0' }} plain><span style={{ fontSize: 12, color: '#999' }}>更多信息</span></Divider></Col>
-              {/* ✨✨ 关键：正确传递 path，这里 field.name 就是索引 ✨✨ */}
-              {/* 直接定义字段而不使用 PersonalAttributes */}
-              <Col span={6}><Form.Item name={[field.name, 'age']} label="年龄"><Input placeholder="自动" readOnly size="large" style={{ backgroundColor: '#f5f5f5', color: '#666' }} /></Form.Item></Col>
-              <Col span={6}><Form.Item name={[field.name, 'gender']} label="性别"><Select options={[{ label: '男', value: '男' }, { label: '女', value: '女' }]} placeholder="自动" size="large" /></Form.Item></Col>
-              <Col span={6}><Form.Item name={[field.name, 'birthday']} label="生日"><Input placeholder="自动" size="large" /></Form.Item></Col>
-              <Col span={6}><Form.Item name={[field.name, 'ethnicity']} label="民族"><EditableSelect options={options.ethnicity} placeholder="如：汉族" /></Form.Item></Col>
-              <Col span={6}><Form.Item name={[field.name, 'education']} label="学历"><EditableSelect options={options.education} placeholder="如：本科" /></Form.Item></Col>
-              <Col span={12}><Form.Item name={[field.name, 'occupation']} label="职业"><EditableSelect options={options.occupation} placeholder="如：农户" /></Form.Item></Col>
-              <Col span={12}> <Form.Item name={[field.name, 'relation']} label="关系" rules={[RULES.required]}><Input size="large" /></Form.Item></Col>
             </Row>
+
+            {/* 根据证件类型显示不同表单 */}
+            <Form.Item noStyle shouldUpdate={(prev, cur) => prev[name]?.[field.name]?.id_type !== cur[name]?.[field.name]?.id_type}>
+              {({ getFieldValue }) => {
+                const idType = getFieldValue([name, field.name, 'id_type']) || '身份证';
+
+                if (idType === '营业执照') {
+                  // ========== 企业表单 ==========
+                  return (
+                    <Row gutter={16}>
+                      <Col span={12}><Form.Item name={[field.name, 'name']} label="企业名称" rules={[RULES.required]}><Input size="large" prefix={<ShopOutlined />} /></Form.Item></Col>
+                      <Col span={12}><Form.Item name={[field.name, 'id_card']} label="统一社会信用代码" rules={[RULES.required]}><Input size="large" /></Form.Item></Col>
+                      <Col span={12}><Form.Item name={[field.name, 'legal_rep']} label="法人代表" rules={[RULES.required]}><Input size="large" prefix={<UserOutlined />} /></Form.Item></Col>
+                      <Col span={12}><Form.Item name={[field.name, 'mobile']} label="联系电话" rules={[RULES.required, RULES.mobile]}><Input size="large" maxLength={11} /></Form.Item></Col>
+                      <Col span={24}><Form.Item name={[field.name, 'address']} label="企业地址" rules={[RULES.required]}><Input size="large" prefix={<HomeOutlined style={{ color: '#ccc' }} />} /></Form.Item></Col>
+                      <Col span={24}><Form.Item name={[field.name, 'relation']} label="关系（可选）"><Input size="large" placeholder="与借款人关系，可不填" /></Form.Item></Col>
+                    </Row>
+                  );
+                } else {
+                  // ========== 个人表单（原有逻辑） ==========
+                  return (
+                    <Row gutter={16}>
+                      <Col span={8}><Form.Item name={[field.name, 'name']} label="姓名" rules={[RULES.required]}><Input size="large" /></Form.Item></Col>
+                      <Col span={10}>
+                        <Form.Item label="证件" required style={{ marginBottom: 0 }}>
+                          <Input.Group compact>
+                            <Form.Item name={[field.name, 'id_type']} noStyle initialValue="身份证"><Select style={{ width: '30%' }} size="large" options={[{ label: '身份证', value: '身份证' }, { label: '营业执照', value: '营业执照' }]} /></Form.Item>
+                            <Form.Item name={[field.name, 'id_card']} noStyle rules={[RULES.required, RULES.id_card]}><Input style={{ width: '70%' }} size="large" placeholder="输入身份证自动计算" /></Form.Item>
+                          </Input.Group>
+                        </Form.Item>
+                      </Col>
+                      <Col span={6}><Form.Item name={[field.name, 'mobile']} label="手机" rules={[RULES.required, RULES.mobile]}><Input size="large" maxLength={11} /></Form.Item></Col>
+                      <Col span={24}><Form.Item name={[field.name, 'address']} label="地址" rules={[RULES.required]}><Input size="large" /></Form.Item></Col>
+
+                      <Col span={24}><Divider dashed style={{ margin: '8px 0' }} plain><span style={{ fontSize: 12, color: '#999' }}>更多信息</span></Divider></Col>
+                      <Col span={6}><Form.Item name={[field.name, 'age']} label="年龄"><Input placeholder="自动" readOnly size="large" style={{ backgroundColor: '#f5f5f5', color: '#666' }} /></Form.Item></Col>
+                      <Col span={6}><Form.Item name={[field.name, 'gender']} label="性别"><Select options={[{ label: '男', value: '男' }, { label: '女', value: '女' }]} placeholder="自动" size="large" /></Form.Item></Col>
+                      <Col span={6}><Form.Item name={[field.name, 'birthday']} label="生日"><Input placeholder="自动" size="large" /></Form.Item></Col>
+                      <Col span={6}><Form.Item name={[field.name, 'ethnicity']} label="民族"><EditableSelect options={options.ethnicity} placeholder="如：汉族" /></Form.Item></Col>
+                      <Col span={6}><Form.Item name={[field.name, 'education']} label="学历"><EditableSelect options={options.education} placeholder="如：本科" /></Form.Item></Col>
+                      <Col span={12}><Form.Item name={[field.name, 'occupation']} label="职业"><EditableSelect options={options.occupation} placeholder="如：农户" /></Form.Item></Col>
+                      <Col span={12}> <Form.Item name={[field.name, 'relation']} label="关系（可选）"><Input size="large" placeholder="与借款人关系" /></Form.Item></Col>
+                    </Row>
+                  );
+                }
+              }}
+            </Form.Item>
           </div>
         ))}
         <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />} size="large" style={{ color: color, borderColor: color }}>手动添加{label}</Button>
