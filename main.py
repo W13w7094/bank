@@ -572,6 +572,128 @@ def generate_investigation_context(data: ContractRequest):
         "enterprise": data.enterprise
     }
 
+# ============= Context Building Helper Functions =============
+
+def _calculate_derived_fields(data: ContractRequest) -> dict:
+    """集中计算所有派生字段，避免重复计算和遗漏"""
+    derived = {}
+    
+    # 金额中文
+    if data.loan_amount:
+        derived['loan_amount_cn'] = num_to_cn(data.loan_amount)
+    
+    # 日期中文
+    if data.start_date:
+        derived['start_date_cn'] = format_date_cn(data.start_date)
+    if data.end_date:
+        derived['end_date_cn'] = format_date_cn(data.end_date)
+    
+    # 年龄计算（集中处理，确保一致性）
+    if data.main_borrower and data.main_borrower.id_card:
+        derived['main_age'] = calculate_age(data.main_borrower.id_card)
+    if data.spouse and data.spouse.id_card:
+        derived['spouse_age'] = calculate_age(data.spouse.id_card)
+    
+    # 贷款类型中文
+    loan_type_map = {'credit': '信用', 'guarantee': '担保', 'mortgage': '抵押'}
+    derived['loan_type_cn'] = loan_type_map.get(data.loan_type, data.loan_type)
+    derived['loan_type'] = derived['loan_type_cn']  # 覆盖为中文
+    
+    # 婚姻状况
+    derived['main_marital_status'] = '已婚' if (data.spouse and data.spouse.name) else '未婚'
+    
+    return derived
+
+def _expand_lists(data: ContractRequest) -> dict:
+    """展开列表数据为独立变量，确保数据完整"""
+    expanded = {}
+    
+    # 共同借款人 (1-3)
+    for i in range(3):
+        if data.joint_borrowers and i < len(data.joint_borrowers):
+            jb_data = data.joint_borrowers[i].model_dump()  # 完整复制
+            jb_data['age'] = calculate_age(jb_data.get('id_card', ''))
+            expanded[f'joint_borrower{i+1}'] = jb_data
+        else:
+            expanded[f'joint_borrower{i+1}'] = {}
+    
+    # 担保人 (1-7)
+    for i in range(7):
+        if data.guarantors and i < len(data.guarantors):
+            g_data = data.guarantors[i].model_dump()  # 完整复制
+            g_data['age'] = calculate_age(g_data.get('id_card', ''))
+            expanded[f'guarantor{i+1}'] = g_data
+        else:
+            expanded[f'guarantor{i+1}'] = {}
+    
+    # 抵押物 (1-5)
+    for i in range(5):
+        if data.collaterals and i < len(data.collaterals):
+            c_data = data.collaterals[i].model_dump()  # 完整复制
+            c_data['value_cn'] = num_to_cn(c_data.get('value', 0))
+            expanded[f'collateral{i+1}'] = c_data
+        else:
+            expanded[f'collateral{i+1}'] = {}
+    
+    return expanded
+
+def _create_aliases(data: ContractRequest) -> dict:
+    """创建常用别名和快捷键"""
+    aliases = {}
+    
+    # 主借款人快捷键
+    if data.main_borrower:
+        aliases.update({
+            'main_name': data.main_borrower.name,
+            'main_card': data.main_borrower.id_card,
+            'main_addr': data.main_borrower.address
+        })
+    
+    # 企业快捷键
+    if data.enterprise:
+        aliases.update({
+            'ent_name': data.enterprise.name,
+            'ent_code': data.enterprise.credit_code
+        })
+    
+    # 支行快捷键
+    if data.branch:
+        aliases.update({
+            'branch_name': data.branch.name,
+            'branch_short_name': data.branch.short_name,
+            'branch_short': data.branch.short_name
+        })
+    
+    return aliases
+
+def build_complete_context(data: ContractRequest) -> dict:
+    """
+    统一构建完整的context，确保数据完整性
+    这是整个系统的核心数据准备函数
+    """
+    # 1. 基础数据（从Pydantic模型导出）
+    context = data.model_dump()
+    
+    # 2. 预计算所有派生字段
+    derived = _calculate_derived_fields(data)
+    context.update(derived)
+    
+    # 3. 列表展开（带完整数据复制）
+    expanded = _expand_lists(data)
+    context.update(expanded)
+    
+    # 4. 别名和快捷键
+    aliases = _create_aliases(data)
+    context.update(aliases)
+    
+    # 5. 全面扁平化（支持 {{ spouse.name }} 等嵌套访问）
+    flat = flatten_context(context)
+    context.update(flat)
+    
+    return context
+
+# ============= API Endpoints =============
+
 @app.post("/api/generate")
 async def generate_contract(data: ContractRequest):
     # 详细记录请求数据，方便排查数据问题
@@ -587,76 +709,10 @@ async def generate_contract(data: ContractRequest):
     except:
         pass
     
-    context = data.model_dump()
-    context['loan_amount_cn'] = num_to_cn(data.loan_amount)
-    context['start_date_cn'] = format_date_cn(data.start_date)
-    context['end_date_cn'] = format_date_cn(data.end_date)
-    
-    # 汉化 loan_type
-    loan_type_map = {
-        'credit': '信用',
-        'guarantee': '担保',
-        'mortgage': '抵押'
-    }
-    context['loan_type_cn'] = loan_type_map.get(data.loan_type, data.loan_type)
-    # 覆盖原 loan_type 为中文，或保留英文
-    context['loan_type'] = context['loan_type_cn']
-
-    
-    # ✨ 简化方案：将列表展开为编号的独立变量
-    # 共同借款人最多3个：joint_borrowers1, joint_borrowers2, joint_borrowers3
-    for i in range(3):
-        if context.get('joint_borrowers') and i < len(context['joint_borrowers']):
-            jb = context['joint_borrowers'][i]
-            context[f'joint_borrower{i+1}'] = jb
-            context[f'joint_borrower{i+1}_age'] = calculate_age(jb.get('id_card'))
-        else:
-            context[f'joint_borrower{i+1}'] = {}
-            context[f'joint_borrower{i+1}_age'] = ""
-    
-    # 担保人最多7个：guarantor1, guarantor2, ..., guarantor7
-    for i in range(7):
-        if context.get('guarantors') and i < len(context['guarantors']):
-            g = context['guarantors'][i]
-            context[f'guarantor{i+1}'] = g
-            context[f'guarantor{i+1}_age'] = calculate_age(g.get('id_card'))
-        else:
-            context[f'guarantor{i+1}'] = {}
-            context[f'guarantor{i+1}_age'] = ""
-    
-    # 抵押物也展开（假设最多5个）
-    for i in range(5):
-        if context.get('collaterals') and i < len(context['collaterals']):
-            c = context['collaterals'][i]
-            c['value_cn'] = num_to_cn(c.get('value', 0))
-            context[f'collateral{i+1}'] = c
-        else:
-            context[f'collateral{i+1}'] = {}
-    # 扁平化数据
-    if data.main_borrower:
-        context.update({
-            'main_name': data.main_borrower.name, 
-            'main_card': data.main_borrower.id_card, 
-            'main_addr': data.main_borrower.address,
-            'main_age': calculate_age(data.main_borrower.id_card),
-            'main_marital_status': '已婚' if (data.spouse and data.spouse.name) else '未婚'
-        })
-    if data.spouse:
-        context['spouse_age'] = calculate_age(data.spouse.id_card)
-    if data.enterprise:
-        context.update({'ent_name': data.enterprise.name, 'ent_code': data.enterprise.credit_code})
-    if data.branch:
-        context.update({
-            'branch_name': data.branch.name,
-            'branch_short_name': data.branch.short_name,
-            'branch_short': data.branch.short_name
-        })
-
-    # ✨✨✨ 关键修复：全面扁平化所有嵌套数据 ✨✨✨
-    # 这样模板中可以用 {{ spouse.name }}, {{ main_borrower.id_card }}, {{ guarantor1.mobile }} 等
-    flat_context = flatten_context(context)
-    # 合并扁平化的数据回原始context（保留原始结构 + 添加扁平化访问）
-    context.update(flat_context)
+    # ✨✨✨ 使用统一的context构建函数 ✨✨✨
+    context = build_complete_context(data)
+    logger.debug(f"✅ Context构建完成，共 {len(context)} 个键")
+    logger.debug(f"关键字段检查 - spouse: {'存在' if context.get('spouse') else '缺失'}, guarantor1: {'存在' if context.get('guarantor1') else '缺失'}")
 
     task_id = str(int(time.time() * 1000))
     temp_dir = os.path.join(OUTPUT_DIR, task_id)
