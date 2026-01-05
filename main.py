@@ -118,19 +118,18 @@ class Enterprise(BaseModel):
 
 class Person(BaseModel):
     name: str = ""
-    id_type: str = "身份证"
+    id_type: str = "身份证"  # 新增：证件类型（身份证/营业执照）
     id_card: str = ""
     mobile: str = ""
-    relation: str = ""
+    relation: Optional[str] = ""  # 改为可选：企业担保时关系不是必填
     address: Optional[str] = ""
     gender: str = ""
     birthday: str = ""
     ethnicity: str = ""
     education: str = ""
-    ethnicity: str = ""
-    education: str = ""
     occupation: str = ""
     age: str = ""  # Added for persistence
+    legal_rep: Optional[str] = ""  # 新增：法人代表（企业专用）
 
 class Collateral(BaseModel):
     owner: str = ""
