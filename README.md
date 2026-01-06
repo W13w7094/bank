@@ -1,65 +1,78 @@
-# 银行合同生成与调查报告系统
+# 银行合同套打系统
 
-## 简介
-这是一个用于自动化生成银行贷款合同及客户调查报告的系统。它包含一个基于 React 的前端界面和一个基于 FastAPI 的后端服务，支持Windows单文件部署（EXE）。
+## 📋 功能特性
 
-## 主要功能
+### 1. 智能合同生成
+- 支持个人和企业客户
+- 自动填充字段
+- 多模板支持（保证/信用/抵押）
+- Word文档生成
 
-### 1. 自动化合同生成
-- 填写客户信息（主贷人、配偶、共同借款人、担保人）
-- 自动计算年龄、性别、生日（基于身份证号）
-- 支持多人信息录入
-- **模板选择**：支持生成多种合同模板（个人/企业、信用/担保/抵押）
-- **一键打包**：生成所有选定的合同文件并打包为ZIP下载
+### 2. Excel到期客户导入 ✅
+- 启动时自动加载到期客户列表
+- 快速选择客户并自动填充所有信息
+- 支持共同借款人和担保人
+- 企业/个人智能识别
 
-### 2. 客户调查报告
-- **集成模板**：调查报告作为标准模板之一供选择
-- **自动生成**：基于填写的客户信息自动生成包含“借款人情况”、“共同借款人”、“担保人”、“抵押物”等章节的调查报告
-- **智能摘要**：自动生成简洁的叙述性摘要，而非简单的表格填充
+### 3. Chrome浏览器插件 ✅
+- 解析生成的txt文件
+- 分类展示所有数据
+- 一键复制任意字段
+- 实时搜索功能
 
-### 3. 用户体验优化
-- **模板搜索**：支持关键词搜索模板
-- **类型标签**：清晰区分 Word (.docx) 和 Excel (.xlsx) 模板
-- **热重载**：开发环境下支持后端热重载，提升开发效率
-- **详细错误提示**：验证失败时显示具体出错的字段和原因
+## 🚀 快速开始
 
-## 使用指南
+### 后端服务
+```bash
+# 安装依赖
+pip install -r requirements.txt
 
-### 运行开发环境
-1. **启动后端**
-   ```bash
-   python3 main.py
-   # 后端默认运行在 http://localhost:8090
-   # 如果端口被占用，会自动尝试 8091, 8092...
-   # 服务启动后会自动打开浏览器（仅生产环境）
-   # 开发模式自动启用热重载
-   ```
+# 启动服务
+python3 main.py
+```
+访问: http://localhost:8090
 
-2. **启动前端**
-   ```bash
-   cd frontend
-   npm run dev
-   # 前端运行在 http://localhost:5173
-   # 已配置为自动连接 localhost:8090
-   ```
+### 前端界面
+```bash
+cd frontend
+npm install
+npm run dev
+```
+访问: http://localhost:5173
 
-### 部署（Windows）
-项目配置了 GitHub Actions，每次推送到 `main` 分支都会自动构建 Windows 可执行文件 (.exe)。
-构建完成后，在 GitHub Releases 页面下载最新的 `bank_contract_app.exe`。
+### Chrome插件安装
+1. Chrome访问 `chrome://extensions/`
+2. 启用"开发者模式"
+3. 点击"加载已解压的扩展程序"
+4. 选择 `chrome-extension` 文件夹
 
-**使用方法：**
-1. 双击 `bank_contract_app.exe` 运行
-2. 程序会自动寻找可用端口（默认8090）
-3. **自动打开浏览器**访问系统
-4. 填写信息并点击生成
+## 📦 发布说明
 
-### 配置文件
-系统使用以下配置文件（与exe同级目录下）：
-- `data.json`: 模板配置、下拉选项配置
-- `branches.json`: 支行信息配置
-- `templates/`: 存放所有Word/Excel模板文件
+### GitHub Releases
+每次推送tag时，GitHub Actions会自动打包：
+- 完整系统压缩包
+- Chrome插件独立包
 
-## 技术栈
-- **Frontend**: React, Ant Design, TypeScript, Vite
-- **Backend**: Python, FastAPI, python-docx, openpyxl
-- **Packaging**: PyInstaller (单文件打包)
+```bash
+# 创建发布
+git tag -a v1.0.0 -m "Release v1.0.0"
+git push origin v1.0.0
+```
+
+## 📁 项目结构
+```
+├── main.py              # FastAPI后端
+├── frontend/            # React前端
+├── chrome-extension/    # Chrome插件
+├── templates/           # Word模板
+├── 贷款到期清单.xlsx   # 客户数据
+└── .github/workflows/   # CI/CD配置
+```
+
+## 🔧 依赖
+- Python 3.10+
+- Node.js 18+
+- FastAPI, pandas, python-docx
+
+## 📄 License
+MIT
