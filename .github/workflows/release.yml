@@ -1,0 +1,87 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt || echo "No requirements.txt"
+      
+      - name: Package Chrome Extension
+        run: |
+          cd chrome-extension
+          zip -r ../chrome-extension.zip . -x "*.DS_Store" -x "__pycache__/*"
+          cd ..
+          echo "✅ Chrome extension packaged"
+      
+      - name: Create Release Archive
+        run: |
+          mkdir -p release
+          # Copy main application files
+          cp -r templates release/
+          cp -r frontend release/
+          cp main.py release/
+          cp data.json release/ || echo "No data.json"
+          cp 贷款到期清单.xlsx release/ || echo "No Excel file"
+          cp README.md release/ || echo "No README"
+          # Add Chrome extension zip
+          cp chrome-extension.zip release/
+          # Create final archive
+          cd release
+          zip -r ../银行合同套打系统-${GITHUB_REF_NAME:-latest}.zip . -x "*.DS_Store" -x "__pycache__/*"
+          cd ..
+          echo "✅ Release archive created"
+      
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            银行合同套打系统-*.zip
+            chrome-extension.zip
+          body: |
+            ## 🎉 新版本发布
+            
+            **包含内容：**
+            - ✅ 后端服务 (FastAPI)
+            - ✅ 前端界面 (React)
+            - ✅ Chrome浏览器插件
+            - ✅ 文档模板
+            - ✅ 到期客户Excel文件
+            
+            **Chrome插件安装：**
+            1. 下载 `chrome-extension.zip`
+            2. 解压到本地文件夹
+            3. Chrome访问 `chrome://extensions/`
+            4. 启用"开发者模式"
+            5. 点击"加载已解压的扩展程序"
+            6. 选择解压后的文件夹
+            
+            **使用文档：** 查看 README.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-package
+          path: |
+            银行合同套打系统-*.zip
+            chrome-extension.zip
+          retention-days: 30
