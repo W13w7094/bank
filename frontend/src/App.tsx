@@ -396,6 +396,18 @@ function App() {
       }
     });
 
+    // 手动解析主借款人身份证（触发年龄、性别、生日计算）
+    const mainIdInfo = parseIdCard(customer.main_id_card);
+    if (mainIdInfo) {
+      form.setFieldsValue({
+        main_borrower: {
+          gender: mainIdInfo.gender,
+          birthday: mainIdInfo.birthday,
+          age: String(mainIdInfo.age)
+        }
+      });
+    }
+
     // 填充配偶（如果有）
     if (customer.spouse_name && customer.spouse_name !== 'nan' && customer.spouse_name.trim()) {
       setHasSpouse(true);
@@ -406,12 +418,34 @@ function App() {
           mobile: customer.spouse_mobile
         }
       });
+
+      // 手动解析配偶身份证
+      const spouseIdInfo = parseIdCard(customer.spouse_id_card);
+      if (spouseIdInfo) {
+        form.setFieldsValue({
+          spouse: {
+            gender: spouseIdInfo.gender,
+            birthday: spouseIdInfo.birthday,
+            age: String(spouseIdInfo.age)
+          }
+        });
+      }
     }
 
     // 填充担保人（如果有）
     if (customer.guarantors && customer.guarantors.length > 0) {
+      const guarantorsWithAge = customer.guarantors.map(g => {
+        const idInfo = parseIdCard(g.id_card);
+        return {
+          ...g,
+          gender: idInfo?.gender || '',
+          birthday: idInfo?.birthday || '',
+          age: idInfo ? String(idInfo.age) : ''
+        };
+      });
+
       form.setFieldsValue({
-        guarantors: customer.guarantors
+        guarantors: guarantorsWithAge
       });
     }
 
