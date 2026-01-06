@@ -291,11 +291,7 @@ function App() {
   useEffect(() => {
     const initData = async () => {
       try {
-        const [branchRes, configRes, customersRes] = await Promise.all([
-          axios.get(BRANCH_API_URL),
-          axios.get(CONFIG_API_URL),
-          axios.get(`${BASE_URL}/api/customers`)
-        ]);
+        const [branchRes, configRes] = await Promise.all([axios.get(BRANCH_API_URL), axios.get(CONFIG_API_URL)]);
         if (Array.isArray(branchRes.data)) {
           setBranchList(branchRes.data);
           setBranchList(branchRes.data);
@@ -311,10 +307,6 @@ function App() {
             collateral_type: (opts.collateral_type || []).map((v: string) => ({ value: v })),
           });
           setAllTemplates(configRes.data.templates || []);
-        }
-        // 加载到期客户列表
-        if (customersRes.data && customersRes.data.customers) {
-          setCustomerList(customersRes.data.customers);
         }
       } catch (err) { } finally { setInitLoading(false); }
     };
@@ -373,128 +365,6 @@ function App() {
     };
     reader.readAsText(file);
     return false;
-  };
-
-  // 选择到期客户并自动填充
-  const handleSelectCustomer = (idCard: string) => {
-    const customer = customerList.find(c => c.main_id_card === idCard);
-    if (!customer) return;
-
-    // 自动设置客户主体类型
-    if (customer.customer_type) {
-      setCustomerType(customer.customer_type);
-    }
-
-    // 填充支行
-    const branch = branchList.find(b => b.short_name === customer.branch_short_name);
-    if (branch) {
-      form.setFieldsValue({ branch });
-    }
-
-    // 判断主借款人是否为企业
-    const isMainEnterprise = customer.main_id_card.startsWith('91');
-
-    // 填充主借款人
-    form.setFieldsValue({
-      main_borrower: {
-        name: customer.main_name,
-        id_type: isMainEnterprise ? '营业执照' : '身份证',
-        id_card: customer.main_id_card,
-        mobile: customer.main_mobile,
-        address: customer.main_address
-      }
-    });
-
-    // 如果是对公客户，填充企业信息
-    if (isMainEnterprise) {
-      form.setFieldsValue({
-        enterprise: {
-          name: customer.main_name,
-          credit_code: customer.main_id_card,
-          address: customer.main_address
-        }
-      });
-    }
-
-    // 手动解析主借款人身份证（触发年龄、性别、生日计算）- 仅个人
-    if (!isMainEnterprise) {
-      const mainIdInfo = parseIdCard(customer.main_id_card);
-      if (mainIdInfo) {
-        form.setFieldsValue({
-          main_borrower: {
-            gender: mainIdInfo.gender,
-            birthday: mainIdInfo.birthday,
-            age: String(mainIdInfo.age)
-          }
-        });
-      }
-    }
-
-    // 填充配偶（如果有）
-    if (customer.spouse_name && customer.spouse_name !== 'nan' && customer.spouse_name.trim()) {
-      setHasSpouse(true);
-      form.setFieldsValue({
-        spouse: {
-          name: customer.spouse_name,
-          id_card: customer.spouse_id_card,
-          mobile: customer.spouse_mobile
-        }
-      });
-
-      // 手动解析配偶身份证
-      const spouseIdInfo = parseIdCard(customer.spouse_id_card);
-      if (spouseIdInfo) {
-        form.setFieldsValue({
-          spouse: {
-            gender: spouseIdInfo.gender,
-            birthday: spouseIdInfo.birthday,
-            age: String(spouseIdInfo.age)
-          }
-        });
-      }
-    }
-
-    // 填充共同借款人（如果有）
-    if (customer.joint_borrowers && customer.joint_borrowers.length > 0) {
-      const jointBorrowersWithAge = customer.joint_borrowers.map((jb: any) => {
-        const idInfo = parseIdCard(jb.id_card);
-        // 判断是否为企业（统一社会信用代码以91开头）
-        const isEnterprise = jb.id_card.startsWith('91');
-        return {
-          ...jb,
-          id_type: isEnterprise ? '营业执照' : '身份证',
-          gender: idInfo?.gender || '',
-          birthday: idInfo?.birthday || '',
-          age: idInfo ? String(idInfo.age) : ''
-        };
-      });
-
-      form.setFieldsValue({
-        joint_borrowers: jointBorrowersWithAge
-      });
-    }
-
-    // 填充担保人（如果有）
-    if (customer.guarantors && customer.guarantors.length > 0) {
-      const guarantorsWithAge = customer.guarantors.map((g: any) => {
-        const idInfo = parseIdCard(g.id_card);
-        // 判断是否为企业
-        const isEnterprise = g.id_card.startsWith('91');
-        return {
-          ...g,
-          id_type: isEnterprise ? '营业执照' : '身份证',
-          gender: idInfo?.gender || '',
-          birthday: idInfo?.birthday || '',
-          age: idInfo ? String(idInfo.age) : ''
-        };
-      });
-
-      form.setFieldsValue({
-        guarantors: guarantorsWithAge
-      });
-    }
-
-    message.success('客户信息已自动填充！');
   };
 
   // No separate investigation report handler needed
