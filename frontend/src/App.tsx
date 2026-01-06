@@ -281,13 +281,21 @@ function App() {
 
   // No OCR states needed
 
+  // 到期客户相关状态
+  const [customerSource, setCustomerSource] = useState<'new' | 'existing'>('new');
+  const [customerList, setCustomerList] = useState<any[]>([]);
+
   const [form] = Form.useForm();
 
   // 1. 初始化
   useEffect(() => {
     const initData = async () => {
       try {
-        const [branchRes, configRes] = await Promise.all([axios.get(BRANCH_API_URL), axios.get(CONFIG_API_URL)]);
+        const [branchRes, configRes, customersRes] = await Promise.all([
+          axios.get(BRANCH_API_URL),
+          axios.get(CONFIG_API_URL),
+          axios.get(`${BASE_URL}/api/customers`)
+        ]);
         if (Array.isArray(branchRes.data)) {
           setBranchList(branchRes.data);
           setBranchList(branchRes.data);
@@ -303,6 +311,10 @@ function App() {
             collateral_type: (opts.collateral_type || []).map((v: string) => ({ value: v })),
           });
           setAllTemplates(configRes.data.templates || []);
+        }
+        // 加载到期客户列表
+        if (customersRes.data && customersRes.data.customers) {
+          setCustomerList(customersRes.data.customers);
         }
       } catch (err) { } finally { setInitLoading(false); }
     };
@@ -361,6 +373,49 @@ function App() {
     };
     reader.readAsText(file);
     return false;
+  };
+
+  // 选择到期客户并自动填充
+  const handleSelectCustomer = (idCard: string) => {
+    const customer = customerList.find(c => c.main_id_card === idCard);
+    if (!customer) return;
+
+    // 填充支行
+    const branch = branchList.find(b => b.short_name === customer.branch_short_name);
+    if (branch) {
+      form.setFieldsValue({ branch });
+    }
+
+    // 填充主借款人
+    form.setFieldsValue({
+      main_borrower: {
+        name: customer.main_name,
+        id_card: customer.main_id_card,
+        mobile: customer.main_mobile,
+        address: customer.main_address
+      }
+    });
+
+    // 填充配偶（如果有）
+    if (customer.spouse_name && customer.spouse_name !== 'nan' && customer.spouse_name.trim()) {
+      setHasSpouse(true);
+      form.setFieldsValue({
+        spouse: {
+          name: customer.spouse_name,
+          id_card: customer.spouse_id_card,
+          mobile: customer.spouse_mobile
+        }
+      });
+    }
+
+    // 填充担保人（如果有）
+    if (customer.guarantors && customer.guarantors.length > 0) {
+      form.setFieldsValue({
+        guarantors: customer.guarantors
+      });
+    }
+
+    message.success('客户信息已自动填充！');
   };
 
   // No separate investigation report handler needed
@@ -639,6 +694,39 @@ function App() {
       key: '1', label: <span style={{ padding: '0 8px' }}><BankOutlined /> 业务与主贷人</span>,
       children: (
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          {/* 客户来源选择 */}
+          <Card style={{ borderRadius: 12, background: '#f0f5ff', border: '1px solid #adc6ff' }}>
+            <Row gutter={16}>
+              <Col span={8}>
+                <Form.Item label="客户来源">
+                  <Radio.Group value={customerSource} onChange={e => setCustomerSource(e.target.value)} buttonStyle="solid">
+                    <Radio.Button value="new">新客户</Radio.Button>
+                    <Radio.Button value="existing">到期客户</Radio.Button>
+                  </Radio.Group>
+                </Form.Item>
+              </Col>
+              {customerSource === 'existing' && (
+                <Col span={16}>
+                  <Form.Item label="选择客户">
+                    <Select
+                      showSearch
+                      placeholder="搜索客户姓名或证件号"
+                      size="large"
+                      options={customerList.map(c => ({
+                        label: `${c.main_name} (${c.main_id_card}) - ${c.branch_short_name}`,
+                        value: c.main_id_card
+                      }))}
+                      onChange={handleSelectCustomer}
+                      filterOption={(input, option) =>
+                        (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                      }
+                    />
+                  </Form.Item>
+                </Col>
+              )}
+            </Row>
+          </Card>
+
           <Card style={{ borderRadius: 12, background: '#f5faff', border: '1px solid #adc6ff' }}>
             <Row gutter={24}>
               <Col span={12}><Form.Item label="客户主体"><Radio.Group value={customerType} onChange={e => { setCustomerType(e.target.value); form.setFieldsValue({ selected_templates: [] }); }} buttonStyle="solid"><Radio.Button value="personal">个人客户</Radio.Button><Radio.Button value="enterprise">企业/对公</Radio.Button></Radio.Group></Form.Item></Col>
