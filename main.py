@@ -523,10 +523,20 @@ async def get_customers():
         customers = []
         
         for idx, row in df.iterrows():
+            # 读取或推断客户主体类型
+            customer_type_raw = str(row.get("客户主体", "")).strip()
+            main_id = str(row.get("证件号（对公情况）", "")).strip()
+            # 如果Excel中有customer_type，使用它；否则根据证件号推断
+            if customer_type_raw and customer_type_raw != "nan":
+                customer_type = customer_type_raw
+            else:
+                customer_type = "enterprise" if main_id.startswith("91") else "personal"
+            
             customer = {
+                "customer_type": customer_type,
                 "branch_short_name": str(row.get("支行简称", "")).strip(),
                 "main_name": str(row.get("贷款人", "")).strip(),
-                "main_id_card": str(row.get("证件号（对公情况）", "")).strip(),
+                "main_id_card": main_id,
                 "main_mobile": str(row.get("联系方式（对公情况）", "")).strip(),
                 "main_address": str(row.get("住址", "")).strip(),
                 "spouse_name": str(row.get("配偶名", "")).strip(),

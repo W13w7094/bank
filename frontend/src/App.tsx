@@ -380,32 +380,54 @@ function App() {
     const customer = customerList.find(c => c.main_id_card === idCard);
     if (!customer) return;
 
+    // 自动设置客户主体类型
+    if (customer.customer_type) {
+      setCustomerType(customer.customer_type);
+    }
+
     // 填充支行
     const branch = branchList.find(b => b.short_name === customer.branch_short_name);
     if (branch) {
       form.setFieldsValue({ branch });
     }
 
+    // 判断主借款人是否为企业
+    const isMainEnterprise = customer.main_id_card.startsWith('91');
+
     // 填充主借款人
     form.setFieldsValue({
       main_borrower: {
         name: customer.main_name,
+        id_type: isMainEnterprise ? '营业执照' : '身份证',
         id_card: customer.main_id_card,
         mobile: customer.main_mobile,
         address: customer.main_address
       }
     });
 
-    // 手动解析主借款人身份证（触发年龄、性别、生日计算）
-    const mainIdInfo = parseIdCard(customer.main_id_card);
-    if (mainIdInfo) {
+    // 如果是对公客户，填充企业信息
+    if (isMainEnterprise) {
       form.setFieldsValue({
-        main_borrower: {
-          gender: mainIdInfo.gender,
-          birthday: mainIdInfo.birthday,
-          age: String(mainIdInfo.age)
+        enterprise: {
+          name: customer.main_name,
+          credit_code: customer.main_id_card,
+          address: customer.main_address
         }
       });
+    }
+
+    // 手动解析主借款人身份证（触发年龄、性别、生日计算）- 仅个人
+    if (!isMainEnterprise) {
+      const mainIdInfo = parseIdCard(customer.main_id_card);
+      if (mainIdInfo) {
+        form.setFieldsValue({
+          main_borrower: {
+            gender: mainIdInfo.gender,
+            birthday: mainIdInfo.birthday,
+            age: String(mainIdInfo.age)
+          }
+        });
+      }
     }
 
     // 填充配偶（如果有）
@@ -432,12 +454,35 @@ function App() {
       }
     }
 
+    // 填充共同借款人（如果有）
+    if (customer.joint_borrowers && customer.joint_borrowers.length > 0) {
+      const jointBorrowersWithAge = customer.joint_borrowers.map((jb: any) => {
+        const idInfo = parseIdCard(jb.id_card);
+        // 判断是否为企业（统一社会信用代码以91开头）
+        const isEnterprise = jb.id_card.startsWith('91');
+        return {
+          ...jb,
+          id_type: isEnterprise ? '营业执照' : '身份证',
+          gender: idInfo?.gender || '',
+          birthday: idInfo?.birthday || '',
+          age: idInfo ? String(idInfo.age) : ''
+        };
+      });
+
+      form.setFieldsValue({
+        joint_borrowers: jointBorrowersWithAge
+      });
+    }
+
     // 填充担保人（如果有）
     if (customer.guarantors && customer.guarantors.length > 0) {
-      const guarantorsWithAge = customer.guarantors.map(g => {
+      const guarantorsWithAge = customer.guarantors.map((g: any) => {
         const idInfo = parseIdCard(g.id_card);
+        // 判断是否为企业
+        const isEnterprise = g.id_card.startsWith('91');
         return {
           ...g,
+          id_type: isEnterprise ? '营业执照' : '身份证',
           gender: idInfo?.gender || '',
           birthday: idInfo?.birthday || '',
           age: idInfo ? String(idInfo.age) : ''
