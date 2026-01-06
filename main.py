@@ -487,6 +487,58 @@ async def get_system_config():
         return config
     except: return default_config
 
+@app.get("/api/customers")
+async def get_customers():
+    """读取Excel文件，返回到期客户列表"""
+    try:
+        import pandas as pd
+        excel_path = os.path.join(BASE_DIR, "贷款到期清单.xlsx")
+        
+        if not os.path.exists(excel_path):
+            logger.warning(f"未找到到期清单文件: {excel_path}")
+            return {"customers": []}
+        
+        logger.info(f"正在读取到期清单: {excel_path}")
+        df = pd.read_excel(excel_path)
+        customers = []
+        
+        for idx, row in df.iterrows():
+            customer = {
+                "branch_short_name": str(row.get("支行简称", "")).strip(),
+                "main_name": str(row.get("贷款人", "")).strip(),
+                "main_id_card": str(row.get("证件号（对公情况）", "")).strip(),
+                "main_mobile": str(row.get("联系方式（对公情况）", "")).strip(),
+                "main_address": str(row.get("住址", "")).strip(),
+                "spouse_name": str(row.get("配偶名", "")).strip(),
+                "spouse_id_card": str(row.get("身份证", "") if pd.notna(row.get("身份证")) else "").strip(),
+                "spouse_mobile": str(row.get("联系方式", "") if pd.notna(row.get("联系方式")) else "").strip(),
+                "guarantors": []
+            }
+            
+            # 解析担保人1-5
+            for i in range(1, 6):
+                g_name_col = f"担保人{i}名称"
+                g_name = str(row.get(g_name_col, "")).strip()
+                if g_name and g_name != "nan":
+                    guarantor = {
+                        "name": g_name,
+                        "id_card": str(row.get(f"担保人{i}身份证", "")).strip(),
+                        "mobile": str(row.get(f"担保人{i}联系方式", "")).strip()
+                    }
+                    customer["guarantors"].append(guarantor)
+            
+            # 只添加有效的客户（至少有姓名）
+            if customer["main_name"] and customer["main_name"] != "nan":
+                customers.append(customer)
+        
+        logger.info(f"成功读取 {len(customers)} 个到期客户")
+        return {"customers": customers}
+    
+    except Exception as e:
+        logger.error(f"读取到期清单失败: {e}")
+        logger.error(traceback.format_exc())
+        return {"customers": [], "error": str(e)}
+
 
 # Helper function to generate investigation report context
 def generate_investigation_context(data: ContractRequest):
