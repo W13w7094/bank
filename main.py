@@ -499,7 +499,23 @@ async def get_customers():
             return {"customers": []}
         
         logger.info(f"正在读取到期清单: {excel_path}")
-        df = pd.read_excel(excel_path)
+        # 指定身份证等列为字符串类型，避免科学计数法
+        df = pd.read_excel(excel_path, dtype={
+            "证件号（对公情况）": str,
+            "身份证": str,
+            "担保人1身份证": str,
+            "担保人2身份证": str,
+            "担保人3身份证": str,
+            "担保人4身份证": str,
+            "担保人5身份证": str,
+            "联系方式（对公情况）": str,
+            "联系方式": str,
+            "担保人1联系方式": str,
+            "担保人2联系方式": str,
+            "担保人3联系方式": str,
+            "担保人4联系方式": str,
+            "担保人5联系方式": str
+        })
         customers = []
         
         for idx, row in df.iterrows():
