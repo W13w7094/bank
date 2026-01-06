@@ -503,6 +503,8 @@ async def get_customers():
         df = pd.read_excel(excel_path, dtype={
             "证件号（对公情况）": str,
             "身份证": str,
+            "共同借款人1证件号": str,
+            "共同借款人2证件号": str,
             "担保人1身份证": str,
             "担保人2身份证": str,
             "担保人3身份证": str,
@@ -510,6 +512,8 @@ async def get_customers():
             "担保人5身份证": str,
             "联系方式（对公情况）": str,
             "联系方式": str,
+            "共同借款人1联系方式": str,
+            "共同借款人2联系方式": str,
             "担保人1联系方式": str,
             "担保人2联系方式": str,
             "担保人3联系方式": str,
@@ -528,8 +532,21 @@ async def get_customers():
                 "spouse_name": str(row.get("配偶名", "")).strip(),
                 "spouse_id_card": str(row.get("身份证", "") if pd.notna(row.get("身份证")) else "").strip(),
                 "spouse_mobile": str(row.get("联系方式", "") if pd.notna(row.get("联系方式")) else "").strip(),
+                "joint_borrowers": [],
                 "guarantors": []
             }
+            
+            # 解析共同借款人1-2
+            for i in range(1, 3):
+                jb_name_col = f"共同借款人{i}名称"
+                jb_name = str(row.get(jb_name_col, "")).strip()
+                if jb_name and jb_name != "nan":
+                    joint_borrower = {
+                        "name": jb_name,
+                        "id_card": str(row.get(f"共同借款人{i}证件号", "")).strip(),
+                        "mobile": str(row.get(f"共同借款人{i}联系方式", "")).strip()
+                    }
+                    customer["joint_borrowers"].append(joint_borrower)
             
             # 解析担保人1-5
             for i in range(1, 6):
