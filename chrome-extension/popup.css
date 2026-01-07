@@ -4,14 +4,18 @@
     box-sizing: border-box;
 }
 
+html,
 body {
+    width: 100%;
     min-height: 100vh;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #333;
+    overflow-x: hidden;
 }
 
 .container {
+    width: 100%;
     background: white;
     min-height: 100vh;
     display: flex;
@@ -19,19 +23,20 @@ body {
 }
 
 .header {
+    width: 100%;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 20px;
+    padding: 16px;
     text-align: center;
 }
 
 .header h1 {
-    font-size: 20px;
-    margin-bottom: 5px;
+    font-size: 18px;
+    margin-bottom: 4px;
 }
 
 .subtitle {
-    font-size: 12px;
+    font-size: 11px;
     opacity: 0.9;
 }
 
@@ -41,9 +46,9 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px 20px;
+    padding: 30px 16px;
     border: 2px dashed #ccc;
-    margin: 20px;
+    margin: 16px;
     border-radius: 12px;
     background: #fafafa;
     cursor: pointer;
@@ -56,29 +61,29 @@ body {
 }
 
 .upload-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
+    font-size: 40px;
+    margin-bottom: 12px;
 }
 
 .upload-text {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .upload-hint {
-    font-size: 12px;
+    font-size: 11px;
     color: #666;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .btn-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    padding: 10px 24px;
+    padding: 8px 20px;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 13px;
     cursor: pointer;
     transition: transform 0.2s;
 }
@@ -91,85 +96,104 @@ body {
     background: #f0f0f0;
     color: #333;
     border: 1px solid #ddd;
-    padding: 8px 16px;
+    padding: 6px 14px;
     border-radius: 6px;
-    font-size: 13px;
+    font-size: 12px;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 .data-area {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 16px;
+    padding: 12px;
+    width: 100%;
 }
 
 .action-bar {
     display: flex;
-    gap: 10px;
-    margin-bottom: 16px;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
 }
 
 .search-input {
     flex: 1;
-    padding: 8px 12px;
+    min-width: 120px;
+    padding: 6px 10px;
     border: 1px solid #ddd;
     border-radius: 6px;
+    font-size: 12px;
 }
 
 .data-container {
     flex: 1;
     overflow-y: auto;
-    max-height: 450px;
+    overflow-x: hidden;
+    max-height: calc(100vh - 180px);
 }
 
 .data-card {
     background: #fff;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
-    padding: 16px;
+    padding: 12px;
     margin-bottom: 12px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    width: 100%;
 }
 
 .card-title {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     color: #667eea;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
     border-bottom: 2px solid #f0f0f0;
 }
 
 .field-row {
     display: grid;
-    grid-template-columns: 120px 1fr 60px;
-    gap: 8px;
+    grid-template-columns: minmax(70px, 90px) 1fr auto;
+    gap: 6px;
     align-items: center;
-    padding: 8px 0;
+    padding: 6px 0;
     border-bottom: 1px solid #f5f5f5;
 }
 
+.field-row:last-child {
+    border-bottom: none;
+}
+
 .field-label {
-    font-size: 12px;
+    font-size: 11px;
     color: #666;
     font-weight: 500;
+    word-break: keep-all;
 }
 
 .field-value {
-    font-size: 13px;
+    font-size: 12px;
     color: #333;
     word-break: break-all;
+    overflow-wrap: break-word;
 }
 
 .copy-btn {
-    padding: 4px 12px;
+    padding: 3px 10px;
     background: #667eea;
     color: white;
     border: none;
     border-radius: 4px;
-    font-size: 11px;
+    font-size: 10px;
     cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+}
+
+.copy-btn:hover {
+    background: #5568d3;
 }
 
 .copy-btn.copied {
@@ -182,6 +206,25 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px;
+    padding: 30px;
     color: #999;
+}
+
+/* 滚动条样式 */
+.data-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.data-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.data-container::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
+}
+
+.data-container::-webkit-scrollbar-thumb:hover {
+    background: #999;
 }
